@@ -1,0 +1,128 @@
+---
+import { supabase } from '../lib/supabase';
+
+const ticker = "GOOGL";
+// Token for past 200 day OHLCV records
+const token = import.meta.env.TIINGO_TOKEN; // Use a second key if you have it
+// Token for live price action
+const liveToken = import.meta.env.TIINGO_TOKEN; // Use live key here
+
+// SYNC FUNCTION (Handles both Historical Array and Live Object)
+async function syncStockToSupabase(ticker: string, tiingoData: any | any[]) {
+  // Convert single object to array if it's live data
+  const dataArray = Array.isArray(tiingoData) ? tiingoData : [tiingoData];
+
+  const rowsToInsert = dataArray.map(day => {
+    // Map Live IEX fields OR Daily fields
+    const isLive = day.last !== undefined || day.tngoLast !== undefined;
+    
+    return {
+      ticker: ticker.toUpperCase(),
+      // For live data, use the timestamp date; for daily, use .date
+      trading_date: isLive ? day.timestamp.split('T')[0] : day.date.split('T')[0],
+      open_price: day.open,
+      high_price: day.high,
+      low_price: day.low,
+      // Fallback: tngoLast -> last -> close (daily)
+      close_price: isLive ? (day.tngoLast || day.last) : day.close,
+      volume: day.volume,
+      updated_at: new Date().toISOString()
+    };
+  });
+
+  const { data, error } = await supabase
+    .from('stock_ohlcv')
+    .upsert(rowsToInsert, { onConflict: 'ticker, trading_date' });
+
+  if (error) console.error("Supabase Sync Error:", error.message);
+  return { success: !error, data };
+}
+
+// if on database = true
+let isCached = true;
+
+// Check if ticker exists on database,
+const { count } = await supabase
+    .from('stock_ohlcv')
+    .select('*', { count: 'exact', head: true })
+    .eq('ticker', ticker.toUpperCase());
+
+// If it doesn't exist, fetch from API and cache in database
+if (!count || count < 200) {
+    isCached = false;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 300);
+    const dateString = startDate.toISOString().split('T')[0];
+
+    const response = await fetch(
+      `https://api.tiingo.com/tiingo/daily/${ticker}/prices?startDate=${dateString}`, 
+      { headers: { "Authorization": `Token ${token}` } }
+    );
+    const tiingoData = await response.json();
+    if (Array.isArray(tiingoData)) await syncStockToSupabase(ticker, tiingoData);
+}
+
+// Check live price for ticker on database, if last fetch was older than 15 mins,
+// fetch from API and cache in database
+const { data: latestRow } = await supabase
+  .from('stock_ohlcv')
+  .select('updated_at')
+  .eq('ticker', ticker.toUpperCase())
+  .order('updated_at', { ascending: false })
+  .limit(1)
+  .maybeSingle();
+
+const now = new Date();
+// Use UTC for comparison to match Supabase's default
+const latestUpdate = latestRow ? new Date(latestRow.updated_at) : new Date(0);
+const timeDiffInMins = Math.floor((now.getTime() - latestUpdate.getTime()) / 1000 / 60);
+
+// Log times to terminal for debugging
+console.log(`Now (UTC): ${now.toISOString()}`);
+console.log(`Last Sync (UTC): ${latestUpdate.toISOString()}`);
+
+if (timeDiffInMins >= 15) {
+    console.log(`⏱️ Cache stale (${timeDiffInMins} mins old). Fetching live price for ${ticker}...`);
+    isCached = false;
+
+    try {
+        const liveResponse = await fetch(
+            `https://api.tiingo.com/iex/${ticker}`, 
+            { headers: { "Authorization": `Token ${liveToken}` } }
+        );
+        
+        if (!liveResponse.ok) throw new Error(`HTTP error! status: ${liveResponse.status}`);
+        
+        const liveData = await liveResponse.json();
+        
+        if (liveData && liveData[0]) {
+            await syncStockToSupabase(ticker, liveData[0]);
+            console.log(`✅ ${ticker} updated successfully.`);
+        }
+    } catch (e) {
+        console.error("❌ Live Fetch Failed:", e);
+        // Show cache data if fetch failed or it will crash
+        isCached = true; 
+    }
+} else {
+    console.log(`🎯 Cache is fresh. Last updated ${timeDiffInMins} mins ago.`);
+    isCached = true;
+}
+
+// 5. Fetch all ticker records on database
+const { data: dbData } = await supabase
+    .from('stock_ohlcv')
+    .select('*')
+    .eq('ticker', ticker.toUpperCase())
+    .order('trading_date', { ascending: false })
+    .limit(250);
+---
+
+<h1>Data for {ticker}</h1>
+
+{isCached ? 
+  <p style="color: green;">✔ Serving from Database Cache (Fresh)</p> : 
+  <p style="color: blue;">📥 Live Price Synced from Tiingo</p>
+}
+
+<pre>{JSON.stringify(dbData, null, 2)}</pre>
