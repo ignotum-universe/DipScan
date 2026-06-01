@@ -1,5 +1,5 @@
-import secDataRaw from '../public/company_tickers.json';
-import etfDataRaw from '../public/etf_tickers.json';
+import secDataRaw from '../data/company_tickers.json';
+import etfDataRaw from '../data/etf_tickers.json';
 
 // Define the shape structures
 interface SECTickerItem {
