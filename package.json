@@ -17,6 +17,7 @@
     "@supabase/supabase-js": "^2.105.4",
     "@tailwindcss/vite": "^4.3.0",
     "@types/react-dom": "^19.2.3",
+    "@vercel/analytics": "^2.0.1",
     "apexcharts": "^5.13.0",
     "astro": "^6.3.1",
     "fast-technical-indicators": "^1.1.4",
