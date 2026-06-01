@@ -375,12 +375,15 @@ export default function TickerCard({ ticker, data }: TickerCardProps) {
 
     if (isVolumeDropoff && isMomentumNeutral) {
       if (isPostVolatile) {
+        inPriceDiscovery = false;
         return "Post-Event Consolidation";
       }
       // Institutional check is now a "subset" of Global Consolidation
       if (isInstitutionallyLiquid && sma200Slope > -0.01) {
+        inPriceDiscovery = false;
         return "Extended Consolidation (Volatility Compression)";
       }
+      inPriceDiscovery = false;
       return "Extended Consolidation (Low Activity)";
     }
 
