@@ -1,5 +1,5 @@
 // src/components/StockCharts.tsx
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import ReactApexChart from 'react-apexcharts';
 
 interface ChartDataPoint {
@@ -27,7 +27,13 @@ type Timeframe = '1M' | '3M' | '6M' | 'YTD' | '1Y' | 'ALL';
 
 export default function StockCharts({ ticker, data }: StockChartsProps) {
   const [timeframe, setTimeframe] = useState<Timeframe>('ALL');
-  
+
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
   const rawChartData = data?.chartData || [];
   const chronologicalData = useMemo(() => [...rawChartData].reverse(), [rawChartData]);
 
@@ -44,140 +50,163 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
   }, [chronologicalData, timeframe]);
 
   // Format data for ApexCharts
-const series = useMemo(() => [
-  {
-    name: 'Price',
-    type: 'candlestick',
-    data: filteredData.map(d => ({
-      x: d.trading_date,
-      y: [d.open_price, d.high_price, d.low_price, d.close_price]
-    }))
-  },
-  {
-    name: 'SMA 200',
-    type: 'line',
-    data: filteredData.map(d => ({
-      x: d.trading_date,
-      y: d.sma200 ?? null
-    }))
-  },
-  {
-    name: 'Rolling VWAP',
-    type: 'line',
-    data: filteredData.map(d => ({
-      x: d.trading_date,
-      y: d.rollingVwap ?? null
-    }))
-  }
-], [filteredData]);
-
-  const options: ApexCharts.ApexOptions = {
-    
-  chart: {
-    type: 'candlestick',
-    width: '100%',
-    height: '100%',
-    toolbar: { show: false },
-    zoom: {
-    enabled: true,
-    type: 'x',
-    autoScaleYaxis: true,
-  },
-  selection: {
-    enabled: false,   // ← disables drag-select zoom
-  },
-  events: {
-  beforeZoom: (_ctx: any, _opts: any): boolean => {
-    return false; // ← returning false cancels the zoom entirely on mobile
-  }
-}
-},
-  
-  responsive: [
-  {
-    breakpoint: 768,
-    options: {
-       chart: {
-        zoom: { enabled: false },
-        toolbar: {
-          show: false,
-          autoSelected: 'pan',  // ← drag = pan on mobile
-        },
-      },
-      xaxis: {
-        tickAmount: 5,              // ← fewer labels so they don't crowd
-      },
-      yaxis: {
-        labels: {
-          offsetX: -15,   // ← tighter on mobile
-          style: {
-            fontSize: '10px',  // ← smaller font = less reserved width
-          },
-        },
-      },
-      stroke: {
-        width: [1, 1.5, 1.5],      // ← thinner lines on small screens
-      }
+  const series = useMemo(() => [
+    {
+      name: 'Price',
+      type: 'candlestick',
+      data: filteredData.map(d => ({
+        x: d.trading_date,
+        y: [d.open_price, d.high_price, d.low_price, d.close_price]
+      }))
+    },
+    {
+      name: 'SMA 200',
+      type: 'line',
+      data: filteredData.map(d => ({
+        x: d.trading_date,
+        y: d.sma200 ?? null
+      }))
+    },
+    {
+      name: 'Rolling VWAP',
+      type: 'line',
+      data: filteredData.map(d => ({
+        x: d.trading_date,
+        y: d.rollingVwap ?? null
+      }))
     }
-  }
-],
-  stroke: {
-    // Index order matches series order: candlestick, SMA200, VWAP
-    width: [1, 2, 2],
-    curve: 'smooth',
-    dashArray: [0, 0, 4]  // VWAP gets a dashed line to distinguish it
-  },
-  xaxis: {
-    type: 'category',
-    labels: {
-      rotate: -45,
-      formatter: (val: string) => {
-        const date = new Date(val);
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  ], [filteredData]);
+
+  const options: ApexCharts.ApexOptions = useMemo(() => ({
+
+    chart: {
+      type: 'candlestick',
+      width: '100%',
+      height: '100%',
+      toolbar: { show: false },
+      zoom: {
+        enabled: true,
+        type: 'x',
+        autoScaleYaxis: true,
+      },
+      selection: {
+        enabled: false,   // ← disables drag-select zoom
+      },
+      events: {
+        beforeZoom: (_ctx: any, _opts: any): boolean => {
+          return false; // ← returning false cancels the zoom entirely on mobile
+        }
       }
     },
-    tickAmount: 10,
-  },
-  yaxis: {
-    tooltip: { enabled: true },
-    decimalsInFloat: 2,
-    labels: {
-    offsetX: -10,  
-  },
-  },
-  tooltip: {
-  custom: ({ series, seriesIndex, dataPointIndex, w }) => {
-    // Access the price data directly
-    const price = series[0][dataPointIndex];
-    return `<div class="p-2 bg-[#0f172a] border border-slate-700 text-slate-100">
-              Price: <strong>$${price.toFixed(2)}</strong>
-            </div>`;
-  }
-},
-  plotOptions: {
-    candlestick: {
-      colors: { upward: '#34d399', downward: '#f87171' }
+
+    responsive: [
+      {
+        breakpoint: 768,
+        options: {
+          chart: {
+            zoom: { enabled: false },
+            toolbar: {
+              show: false,
+              autoSelected: 'pan',  // ← drag = pan on mobile
+            },
+          },
+          xaxis: {
+            tickAmount: 5,              // ← fewer labels so they don't crowd
+          },
+          yaxis: {
+            labels: {
+              offsetX: -15,   // ← tighter on mobile
+              style: {
+                fontSize: '10px',  // ← smaller font = less reserved width
+              },
+            },
+          },
+          stroke: {
+            width: [1, 1.5, 1.5],      // ← thinner lines on small screens
+          },
+          markers: {
+            size: 0, // Set to 0 if you don't want dots, or >0 if you want them visible
+            hover: {
+              size: 5 // The size of the dot when you hover over the chart
+            }
+          }
+        }
+      }
+    ],
+    stroke: {
+      // Index order matches series order: candlestick, SMA200, VWAP
+      width: [1, 2, 2],
+      curve: 'smooth',
+      dashArray: [0, 0, 4]  // VWAP gets a dashed line to distinguish it
+    },
+    xaxis: {
+      type: 'category',
+      labels: {
+        rotate: -45,
+        formatter: (val: string) => {
+          const date = new Date(val);
+          return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+      },
+      tickAmount: 10,
+    },
+    yaxis: {
+      tooltip: { enabled: true },
+      decimalsInFloat: 2,
+      labels: {
+        offsetX: -10,
+      },
+    },
+    tooltip: {
+      shared: true, // This enables the single vertical line/crosshair across all series
+      intersect: false, // Set to false to show tooltip even when not directly on the line
+      custom: ({ series, seriesIndex, dataPointIndex, w }) => {
+        // series[0] = Candlestick (which has 4 values: [O, H, L, C])
+        // series[1] = SMA 200
+        // series[2] = Rolling VWAP
+
+        const candle = series[0][dataPointIndex];
+        const sma = series[1][dataPointIndex];
+        const vwap = series[2][dataPointIndex];
+
+        // Check if we have valid data for this point
+        if (!candle) return '';
+
+        return `
+      <div class="p-3 bg-[#0f172a] border border-slate-700 text-slate-100 text-xs shadow-xl">
+        <div class="mb-1 border-b border-slate-600 pb-1 font-bold">
+          ${w.globals.labels[dataPointIndex]}
+        </div>
+        <div>Price: <span class="text-emerald-400 font-bold">$${candle.toFixed(2)}</span></div>
+        ${vwap !== null ? `<div>VWAP: <span class="text-indigo-400 font-bold">$${vwap.toFixed(2)}</span></div>` : ''}
+        ${sma !== null ? `<div>SMA 200: <span class="text-yellow-400 font-bold">$${sma.toFixed(2)}</span></div>` : ''}
+      </div>
+    `;
+      }
+    },
+    plotOptions: {
+      candlestick: {
+        colors: { upward: '#34d399', downward: '#f87171' }
+      }
+    },
+    colors: ['transparent', '#facc15', '#818cf8'], // candle color handled by plotOptions; SMA=yellow, VWAP=purple
+    legend: {
+      show: true,
+      position: 'top',        // ← moves it above the chart, never overlaps
+      horizontalAlign: 'left',
+      labels: { colors: '#94a3b8' },
+      offsetY: 0,
     }
-  },
-  colors: ['transparent', '#facc15', '#818cf8'], // candle color handled by plotOptions; SMA=yellow, VWAP=purple
-  legend: {
-    show: true,
-  position: 'top',        // ← moves it above the chart, never overlaps
-  horizontalAlign: 'left',
-  labels: { colors: '#94a3b8' },
-  offsetY: 0,
-}
-};
+ }), []);
 
-const latestPrice = useMemo(() => {
-  if (filteredData.length === 0) return null;
-  return filteredData[filteredData.length - 1].close_price;
-}, [filteredData]);
+  const latestPrice = useMemo(() => {
+    if (filteredData.length === 0) return null;
+    return filteredData[filteredData.length - 1].close_price;
+  }, [filteredData]);
 
-const isLoaded = series.length > 0 && series[0].data.length > 0;
-
-return (
-    <div className="w-full h-auto bg-[#0f172a] p-5 pb-0 rounded-xl md:p-5">
+  return (
+    <div className="w-full h-auto bg-[#0f172a] p-5 pb-0 rounded-xl md:p-5 min-h-[500px]">
+      {/* Timeframe Buttons */}
       <div className="flex gap-2 mb-5 flex-wrap">
         {(['1M', '3M', '6M', 'YTD', '1Y', 'ALL'] as Timeframe[]).map((tf) => (
           <button
@@ -192,44 +221,38 @@ return (
         ))}
       </div>
 
-    {/* Header */}
-     <h3 className="text-slate-100 text-lg mb-2 flex items-center gap-3">
-    <span className="font-bold">{ticker}:</span>
-    {latestPrice !== null && (
-      <span className="text-emerald-400">
-        ${latestPrice.toFixed(2)}
-      </span>
-    )}
+      {/* Header */}
+      <h3 className="text-slate-100 text-lg mb-2 flex items-center gap-3">
+        <span className="font-bold">{ticker}:</span>
+        {latestPrice !== null && (
+          <span className="text-emerald-400">${latestPrice.toFixed(2)}</span>
+        )}
+      </h3>
 
-  </h3>
+      {/* Chart Container */}
+      <div className="w-full aspect-4/3 md:aspect-auto md:h-[400px] relative bg-[#0f172a] rounded-lg overflow-hidden">
+        
+        {/* 3. True Loading Overlay linked to mounting status */}
+        {!hasMounted && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0f172a]">
+            <p className="text-slate-500 animate-pulse">Loading chart data...</p>
+          </div>
+        )}
 
-    {/* Chart Container - Persistent mounting to prevent layout shifts */}
-    <div className="w-full aspect-4/3 md:aspect-auto md:h-[400px] relative bg-[#0f172a] rounded-lg overflow-hidden">
-      
-      {/* Loading Overlay - Transitions out smoothly */}
-      <div 
-        className={`absolute inset-0 z-10 flex items-center justify-center bg-[#0f172a] transition-opacity duration-500 ease-in-out ${
-          isLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'
-        }`}
-      >
-        <p className="text-slate-500 animate-pulse">Loading chart data...</p>
-      </div>
-
-      {/* Chart Wrapper - Always rendered, just toggled visibility */}
-      <div className={`w-full h-full transition-opacity duration-500 ease-in-out ${
-          isLoaded ? 'opacity-100' : 'opacity-0'
-        }`}
-      >
-        <ReactApexChart 
-          key={JSON.stringify(filteredData)}
-          options={options} 
-          series={series} 
-          type="candlestick" 
-          height="100%" 
-          width="100%"
-        />
+        {/* Chart Wrapper */}
+        <div className={`w-full h-full transition-opacity duration-300 ${hasMounted ? 'opacity-100' : 'opacity-0'}`}>
+          {hasMounted && (
+            <ReactApexChart 
+              // 4. REMOVED key={JSON.stringify(filteredData)} to stop the violent re-mounts
+              options={options} 
+              series={series} 
+              type="candlestick" 
+              height="100%" 
+              width="100%"
+            />
+          )}
+        </div>
       </div>
     </div>
-  </div>
-); 
+  );
 }
