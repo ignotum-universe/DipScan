@@ -11,7 +11,7 @@ export default defineConfig({
   integrations: [react()], // This replaces the need for @vitejs/plugin-react
   vite: {
     ssr: {
-      noExternal: ['fast-technical-indicators']
+      noExternal: ['fast-technical-indicators', 'react-apexcharts', 'apexcharts']
     },
     plugins: [tailwindcss()]
   }

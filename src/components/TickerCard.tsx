@@ -1,6 +1,6 @@
 // src/components/TickerCard.tsx
 import React, { useState } from 'react';
-import StockCharts from './StockCharts';
+import ClientOnlyChart from './ClientOnlyChart';
 
 import { STATUS_MATRIX, getZScoreBadge, variantBorderClasses, variantTextClasses, getZScoreExplained, getCardStyles } from '../data/statusVerdicts';
 
@@ -292,9 +292,9 @@ export default function TickerCard({ ticker, data }: TickerCardProps) {
     const isPriceActuallyPinned = intradayRangePercent < 0.03;
 
 
-if (zScore > -1.2 && zScore < 0.5 && relativeVolumeRatio > 2.0 && isPriceActuallyPinned) {
-  return "Volume Anomaly (Price Pinned)";
-}
+    if (zScore > -1.2 && zScore < 0.5 && relativeVolumeRatio > 2.0 && isPriceActuallyPinned) {
+      return "Volume Anomaly (Price Pinned)";
+    }
 
     //Extreme pump guard
     if (zScore > 2.0) return "Extreme Short-Term Overextension";
@@ -390,22 +390,22 @@ if (zScore > -1.2 && zScore < 0.5 && relativeVolumeRatio > 2.0 && isPriceActuall
       return "Standard Bull Market Baseline (Healthy Consolidation)";
     }
     const isVeryNearSMA = Math.abs(latestPrice - latest.sma200) / latest.sma200 < 0.02;
-if (isVeryNearSMA) return "Baseline Recovery (Testing SMA)";
+    if (isVeryNearSMA) return "Baseline Recovery (Testing SMA)";
 
-// Sharp drop, high volume below SMA = genuine selling pressure
-if (zScore < -1.8) return "Falling Knife (Slow Decay)";
+    // Sharp drop, high volume below SMA = genuine selling pressure
+    if (zScore < -1.8) return "Falling Knife (Slow Decay)";
 
-// Positive momentum with institutional backing below SMA = potential real recovery
-if (zScore > 1.0 && isInstitutionallyLiquid && relativeVolumeRatio > 1.5) {
-  return "Upward Price Discovery (Bear Market Breakout)";
-}
+    // Positive momentum with institutional backing below SMA = potential real recovery
+    if (zScore > 1.0 && isInstitutionallyLiquid && relativeVolumeRatio > 1.5) {
+      return "Upward Price Discovery (Bear Market Breakout)";
+    }
 
-// Mild positive momentum but low volume below SMA = likely a fake bounce
-if (zScore > 0.5 && zScore < 1.0 && relativeVolumeRatio < 0.8) {
-  return "Bear Market Trap (Dead Cat Bounce)";
-}
+    // Mild positive momentum but low volume below SMA = likely a fake bounce
+    if (zScore > 0.5 && zScore < 1.0 && relativeVolumeRatio < 0.8) {
+      return "Bear Market Trap (Dead Cat Bounce)";
+    }
 
-return "Structural Grind Down";
+    return "Structural Grind Down";
 
   };
 
@@ -468,58 +468,58 @@ return "Structural Grind Down";
   }
   else {
     // --- GENERAL CONSOLIDATION / EQUILIBRIUM STRUCTURAL MATRIX ---
-const validFloorNodes = topNodes.filter(node => node.priceBin <= maxPriceAllowed);
+    const validFloorNodes = topNodes.filter(node => node.priceBin <= maxPriceAllowed);
 
-// Define how far away a node can be before it's considered useless (e.g., 12%)
-const MAX_NODE_DISTANCE_PCT = 0.10; 
+    // Define how far away a node can be before it's considered useless (e.g., 12%)
+    const MAX_NODE_DISTANCE_PCT = 0.10;
 
-if (validFloorNodes.length > 0) {
-  validFloorNodes.sort((a, b) => b.priceBin - a.priceBin);
-  const targetNode = validFloorNodes[0].priceBin;
-  const distanceToNodePct = (latestPrice - targetNode) / latestPrice;
+    if (validFloorNodes.length > 0) {
+      validFloorNodes.sort((a, b) => b.priceBin - a.priceBin);
+      const targetNode = validFloorNodes[0].priceBin;
+      const distanceToNodePct = (latestPrice - targetNode) / latestPrice;
 
-  // SENSITIVITY CHECK 1: Did the price run away from the node?
-  if (distanceToNodePct > MAX_NODE_DISTANCE_PCT) {
-    // 🚨 RUNAWAY PRICE PROTOCOL 🚨
-    // Node is too far away to act as immediate support. Switch to dynamic anchors.
-    
-    // Fallback Option A: Use a short-term SMA if you have it (e.g., 20 SMA)
-    // suggestedBuyLimit = parseFloat((latest.sma20 * 1.005).toFixed(2));
-    
-    // Fallback Option B: Volatility/ATR pullback (e.g., buy a 3% dip)
-    suggestedBuyLimit = parseFloat((latestPrice * 0.97).toFixed(2));
-    strategyMessage = `Price has ran up too high against historical prices to reliably predict an entry (${(distanceToNodePct * 100).toFixed(1)}% above highest historical node). Set entry at a standard 3% pullback.`;
+      // SENSITIVITY CHECK 1: Did the price run away from the node?
+      if (distanceToNodePct > MAX_NODE_DISTANCE_PCT) {
+        // 🚨 RUNAWAY PRICE PROTOCOL 🚨
+        // Node is too far away to act as immediate support. Switch to dynamic anchors.
 
-  } 
-  // SENSITIVITY CHECK 2: Are we above or below this heavy accumulation shelf?
-  else if (latestPrice > targetNode) {
-    // Node is beneath us (True Support Floor) and within a healthy distance.
-    suggestedBuyLimit = parseFloat((targetNode * 1.003).toFixed(2));
-    strategyMessage = `Price is consolidating above key historical support ($${targetNode}). Entry limit set just above to front-run institutional buy walls.`;
-  } 
-  else {
-    // Node is above us (Overhead Resistance Ceiling).
-    suggestedBuyLimit = parseFloat((latestPrice * 0.99).toFixed(2));
-    strategyMessage = `Major volume node ($${targetNode}) is acting as heavy overhead resistance. Entry limit shaved 1% below current price to await local support stability.`;
-  }
+        // Fallback Option A: Use a short-term SMA if you have it (e.g., 20 SMA)
+        // suggestedBuyLimit = parseFloat((latest.sma20 * 1.005).toFixed(2));
 
-} else if (pocPrice > 0 && pocPrice < latestPrice) {
-  const distanceToPocPct = (latestPrice - pocPrice) / latestPrice;
-  
-  if (distanceToPocPct > MAX_NODE_DISTANCE_PCT) {
-     // Same runaway logic for the POC
-     suggestedBuyLimit = parseFloat((latestPrice * 0.97).toFixed(2));
-     strategyMessage = `POC ($${pocPrice}) is too far below current price. Asset is in price discovery. Entry set for a standard 3% local pullback.`;
-  } else {
-     // POC is below us (Support) and close enough to matter
-     suggestedBuyLimit = parseFloat((pocPrice * 1.003).toFixed(2));
-     strategyMessage = `No nearby volume shelves found. Entry is front-running the point of control ($${pocPrice}) where global volume is heaviest.`;
-  }
-} else {
-  // POC is above us or missing. Track local price action decay.
-  suggestedBuyLimit = parseFloat((latestPrice * 0.99).toFixed(2));
-  strategyMessage = "Price is searching for a local bottom below historical nodes. Entry set slightly below current price to capture daily volatility tails.";
-}
+        // Fallback Option B: Volatility/ATR pullback (e.g., buy a 3% dip)
+        suggestedBuyLimit = parseFloat((latestPrice * 0.97).toFixed(2));
+        strategyMessage = `Price has ran up too high against historical prices to reliably predict an entry (${(distanceToNodePct * 100).toFixed(1)}% above highest historical node). Set entry at a standard 3% pullback.`;
+
+      }
+      // SENSITIVITY CHECK 2: Are we above or below this heavy accumulation shelf?
+      else if (latestPrice > targetNode) {
+        // Node is beneath us (True Support Floor) and within a healthy distance.
+        suggestedBuyLimit = parseFloat((targetNode * 1.003).toFixed(2));
+        strategyMessage = `Price is consolidating above key historical support ($${targetNode}). Entry limit set just above to front-run institutional buy walls.`;
+      }
+      else {
+        // Node is above us (Overhead Resistance Ceiling).
+        suggestedBuyLimit = parseFloat((latestPrice * 0.99).toFixed(2));
+        strategyMessage = `Major volume node ($${targetNode}) is acting as heavy overhead resistance. Entry limit shaved 1% below current price to await local support stability.`;
+      }
+
+    } else if (pocPrice > 0 && pocPrice < latestPrice) {
+      const distanceToPocPct = (latestPrice - pocPrice) / latestPrice;
+
+      if (distanceToPocPct > MAX_NODE_DISTANCE_PCT) {
+        // Same runaway logic for the POC
+        suggestedBuyLimit = parseFloat((latestPrice * 0.97).toFixed(2));
+        strategyMessage = `POC ($${pocPrice}) is too far below current price. Asset is in price discovery. Entry set for a standard 3% local pullback.`;
+      } else {
+        // POC is below us (Support) and close enough to matter
+        suggestedBuyLimit = parseFloat((pocPrice * 1.003).toFixed(2));
+        strategyMessage = `No nearby volume shelves found. Entry is front-running the point of control ($${pocPrice}) where global volume is heaviest.`;
+      }
+    } else {
+      // POC is above us or missing. Track local price action decay.
+      suggestedBuyLimit = parseFloat((latestPrice * 0.99).toFixed(2));
+      strategyMessage = "Price is searching for a local bottom below historical nodes. Entry set slightly below current price to capture daily volatility tails.";
+    }
   }
 
 
@@ -632,7 +632,7 @@ if (validFloorNodes.length > 0) {
             </button>
 
             <div className="mt-12">
-              <StockCharts
+              <ClientOnlyChart
                 ticker={ticker}
                 data={{
                   chartData: chartData,
