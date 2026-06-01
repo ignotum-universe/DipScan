@@ -172,6 +172,8 @@ const latestPrice = useMemo(() => {
   return filteredData[filteredData.length - 1].close_price;
 }, [filteredData]);
 
+const isLoaded = series.length > 0 && series[0].data.length > 0;
+
   return (
     <div className="w-full h-auto bg-[#0f172a] p-5 pb-0 rounded-xl md:p-5">
       <div className="flex gap-2 mb-5 flex-wrap">
@@ -197,15 +199,24 @@ const latestPrice = useMemo(() => {
       </span>
     )}
   </h3>
-        <ReactApexChart 
-          key={JSON.stringify(filteredData)}
-          options={options} 
-          series={series} 
-          type="line" 
-          height="100%" 
-          width="100%"
-        />
+        <div className="w-full aspect-4/3 md:aspect-auto md:h-[400px] relative">
+        {!isLoaded ? (
+          // THIS IS YOUR LOADING PLACEHOLDER
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-800/50 animate-pulse rounded-lg">
+            <p className="text-slate-400">Loading chart data...</p>
+          </div>
+        ) : ( 
+          <ReactApexChart 
+            key={JSON.stringify(filteredData)}
+            options={options} 
+            series={series} 
+            type="candlestick" // Ensure this matches the plotOptions
+            height="100%" 
+            width="100%"
+          />
+        )}
       </div>
+    </div>
     </div>
   );
 }

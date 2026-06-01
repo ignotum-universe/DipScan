@@ -131,12 +131,27 @@ export default function StockSearch() {
         </ul>
       )}
 
+      {/* Confirmation Modal Overlay Component Blocks */}
       {isModalOpen && pendingSelection && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="w-full max-w-sm bg-white rounded-xl shadow-xl p-5 space-y-4">
-            <h3 className="text-base font-semibold text-slate-900">Add {pendingSelection.symbol}?</h3>
-            <div className="flex justify-end space-x-2">
-              <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-slate-500">Cancel</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-sm bg-white rounded-xl shadow-xl border border-slate-100 p-5 space-y-4 transform transition-all scale-100">
+            <div className="space-y-2">
+              <h3 className="text-base font-semibold text-slate-900">Add to Watchlist?</h3>
+              <p className="text-sm text-slate-500">
+                Are you sure you want to add{' '}
+                <strong className="text-slate-800">{pendingSelection.symbol}</strong> ({pendingSelection.fullName})
+                to the watchlist?
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end space-x-2 text-sm font-medium pt-2">
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition"
+              >
+                Cancel
+              </button>
               <button onClick={handleConfirmAdd} disabled={isSubmitting} className="px-4 py-2 bg-blue-600 text-white rounded-lg">
                 {isSubmitting ? 'Adding...' : 'Add'}
               </button>
