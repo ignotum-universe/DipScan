@@ -174,49 +174,58 @@ const latestPrice = useMemo(() => {
 
 const isLoaded = series.length > 0 && series[0].data.length > 0;
 
-  return (
-    <div className="w-full h-auto bg-[#0f172a] p-5 pb-0 rounded-xl md:p-5">
-      <div className="flex gap-2 mb-5 flex-wrap">
-        {(['1M', '3M', '6M', 'YTD', '1Y', 'ALL'] as Timeframe[]).map((tf) => (
-          <button
-            key={tf}
-            onClick={() => setTimeframe(tf)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition ${
-              timeframe === tf ? 'bg-sky-400 text-slate-900' : 'bg-slate-800 text-slate-400'
-            }`}
-          >
-            {tf}
-          </button>
-        ))}
+return (
+  <div className="w-full h-auto bg-[#0f172a] p-5 pb-0 rounded-xl md:p-5">
+    {/* Timeframe Buttons */}
+    <div className="flex gap-2 mb-5 flex-wrap">
+      {(['1M', '3M', '6M', 'YTD', '1Y', 'ALL'] as Timeframe[]).map((tf) => (
+        <button
+          key={tf}
+          onClick={() => setTimeframe(tf)}
+          className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition ${
+            timeframe === tf ? 'bg-sky-400 text-slate-900' : 'bg-slate-800 text-slate-400'
+          }`}
+        >
+          {tf}
+        </button>
+      ))}
+    </div>
+
+    {/* Header */}
+    <h3 className="text-slate-100 text-lg mb-2 flex items-center gap-3">
+      <span className="font-bold">{ticker}:</span>
+      {latestPrice !== null && (
+        <span className="text-emerald-400 font-mono">${latestPrice.toFixed(2)}</span>
+      )}
+    </h3>
+
+    {/* Chart Container - Persistent mounting to prevent layout shifts */}
+    <div className="w-full aspect-4/3 md:aspect-auto md:h-[400px] relative bg-[#0f172a] rounded-lg overflow-hidden">
+      
+      {/* Loading Overlay - Transitions out smoothly */}
+      <div 
+        className={`absolute inset-0 z-10 flex items-center justify-center bg-[#0f172a] transition-opacity duration-500 ease-in-out ${
+          isLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}
+      >
+        <p className="text-slate-500 animate-pulse">Loading chart data...</p>
       </div>
 
-      <div className="w-full aspect-4/3 md:aspect-auto md:h-[400px]">
-  <h3 className="text-slate-100 text-lg mb-2 flex items-center gap-3">
-    <span className="font-bold">{ticker}:</span>
-    {latestPrice !== null && (
-      <span className="text-emerald-400">
-        ${latestPrice.toFixed(2)}
-      </span>
-    )}
-  </h3>
-        <div className="w-full aspect-4/3 md:aspect-auto md:h-[400px] relative">
-        {!isLoaded ? (
-          // THIS IS YOUR LOADING PLACEHOLDER
-          <div className="absolute inset-0 flex items-center justify-center bg-slate-800/50 animate-pulse rounded-lg">
-            <p className="text-slate-400">Loading chart data...</p>
-          </div>
-        ) : ( 
-          <ReactApexChart 
-            key={JSON.stringify(filteredData)}
-            options={options} 
-            series={series} 
-            type="candlestick" // Ensure this matches the plotOptions
-            height="100%" 
-            width="100%"
-          />
-        )}
+      {/* Chart Wrapper - Always rendered, just toggled visibility */}
+      <div className={`w-full h-full transition-opacity duration-500 ease-in-out ${
+          isLoaded ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        <ReactApexChart 
+          key={JSON.stringify(filteredData)}
+          options={options} 
+          series={series} 
+          type="candlestick" 
+          height="100%" 
+          width="100%"
+        />
       </div>
     </div>
-    </div>
-  );
+  </div>
+); 
 }
