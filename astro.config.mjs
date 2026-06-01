@@ -1,12 +1,11 @@
-// astro.config.mjs
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
-import node from '@astrojs/node';
+import vercel from '@astrojs/vercel/serverless'; // Change this line
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   output: 'server',
-  adapter: node({ mode: 'standalone' }),
+  adapter: vercel(), // Update this line
   integrations: [react()],
   vite: {
     ssr: {
