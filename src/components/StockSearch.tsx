@@ -1,5 +1,7 @@
-//StockSearch.astro
-import { useState, useEffect, useRef } from 'react';
+import { useState, useMemo } from 'react';
+// Imports are now processed at build time by Vite
+import secDataRaw from '../data/company_tickers.json';
+import etfDataRaw from '../data/etf_tickers.json';
 
 interface SECTickerItem {
   cik_str: number;
@@ -12,42 +14,33 @@ interface NormalizedTicker {
   fullName: string;
 }
 
+// Transform the data once outside the component to keep memory usage stable
+const tickerDatabase: NormalizedTicker[] = useMemo(() => {
+  const secData = secDataRaw as Record<string, SECTickerItem>;
+  const etfData = etfDataRaw as NormalizedTicker[];
+
+  const secNormalized = Object.values(secData).map((item) => ({
+    symbol: String(item.ticker || '').toUpperCase().trim(),
+    fullName: String(item.title || '').trim()
+  }));
+
+  const combined = [...secNormalized, ...etfData].filter(item => item.symbol);
+  
+  // Dedupe
+  const seen = new Set<string>();
+  return combined.filter(item => {
+    if (seen.has(item.symbol)) return false;
+    seen.add(item.symbol);
+    return true;
+  });
+}, []);
+
 export default function StockSearch() {
-  const [tickerDatabase, setTickerDatabase] = useState<NormalizedTicker[]>([]);
   const [results, setResults] = useState<NormalizedTicker[]>([]);
   const [inputValue, setInputValue] = useState('');
-  
-  // Modal tracking states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [pendingSelection, setPendingSelection] = useState<NormalizedTicker | null>(null);
-
-  const formRef = useRef<HTMLFormElement>(null);
-
-  useEffect(() => {
-  Promise.all([
-    fetch('/company_tickers.json').then(res => res.json()),
-    fetch('/etf_tickers.json').then(res => res.json())
-  ]).then(([secData, etfData]: [Record<string, SECTickerItem>, NormalizedTicker[]]) => {
-    const secNormalized = Object.values(secData).map((item) => ({
-      symbol: String(item.ticker || '').toUpperCase().trim(),
-      fullName: String(item.title || '').trim()
-    }));
-
-    // ETF file is already a flat array in NormalizedTicker shape
-    const combined = [...secNormalized, ...etfData]
-      .filter(item => item.symbol);
-
-    // Dedupe in case any ETFs overlap with SEC listings
-    const seen = new Set<string>();
-    const deduped = combined.filter(item => {
-      if (seen.has(item.symbol)) return false;
-      seen.add(item.symbol);
-      return true;
-    });
-
-    setTickerDatabase(deduped);
-  }).catch(err => console.error("Error loading ticker databases:", err));
-}, []);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value.toUpperCase().trim();
@@ -59,16 +52,12 @@ export default function StockSearch() {
     }
 
     const matches = tickerDatabase
-      .filter(item => 
-        item.symbol.includes(query) || 
-        item.fullName.toUpperCase().includes(query)
-      )
+      .filter(item => item.symbol.includes(query) || item.fullName.toUpperCase().includes(query))
       .slice(0, 5);
 
     setResults(matches);
   };
 
-  // Step 1: Intercept choice and trigger modal display
   const initiateAddTicker = (item: NormalizedTicker) => {
     setPendingSelection(item);
     setIsModalOpen(true);
@@ -76,70 +65,45 @@ export default function StockSearch() {
     setResults([]);
   };
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const handleConfirmAdd = async () => {
+    if (isSubmitting || !pendingSelection) return;
+    setIsSubmitting(true);
 
-  // Step 2: User confirmed. Commit selection to Astro SSR frontmatter pipeline
-const handleConfirmAdd = async () => {
-  // 1. Prevent double-click early exit
-  if (isSubmitting || !pendingSelection) return;
+    try {
+      const response = await fetch('/api/watchlist', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'ADD', ticker: pendingSelection.symbol }),
+        headers: { 'Content-Type': 'application/json' }
+      });
 
-  setIsSubmitting(true);
-
-  try {
-    const response = await fetch('/api/watchlist', {
-      method: 'POST',
-      body: JSON.stringify({ action: 'ADD', ticker: pendingSelection.symbol }),
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-    const data = await response.json().catch(() => ({}));
-
-    // 2. Handle Errors
-    if (!response.ok) {
-      if (data.error?.includes('Limit reached')) {
-        document.getElementById('limit-modal')?.classList.remove('hidden');
-      } else if (data.error?.includes('already in watchlist')) {
-        alert(`${pendingSelection.symbol} is already saved in your watchlist.`);
-        setIsModalOpen(false);
-        setPendingSelection(null);
-      } else if (response.status === 429) {
-        alert('Too many requests — please wait a moment and try again.');
-      } else {
-        console.error('API Error:', data.error || 'Unknown error');
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        if (data.error?.includes('Limit reached')) {
+          document.getElementById('limit-modal')?.classList.remove('hidden');
+        } else if (data.error?.includes('already in watchlist')) {
+          alert(`${pendingSelection.symbol} is already saved.`);
+        } else {
+          alert('Error adding ticker.');
+        }
+        return;
       }
-      return; // Exit after handling error
+
+      window.dispatchEvent(new CustomEvent('watchlist-updated', {
+        detail: { ticker: pendingSelection.symbol }
+      }));
+      
+      setIsModalOpen(false);
+      setPendingSelection(null);
+    } catch (err) {
+      console.error('Network error:', err);
+      alert('Something went wrong.');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    // 3. Success
-    window.dispatchEvent(new CustomEvent('watchlist-updated', {
-      detail: { ticker: pendingSelection.symbol }
-    }));
-    
-    setIsModalOpen(false);
-    setPendingSelection(null);
-
-  } catch (err) {
-    console.error('Network or Parse error:', err);
-    alert('Something went wrong. Please check your connection.');
-  } finally {
-    // 4. Always reset loading state
-    setIsSubmitting(false);
-  }
-};
-
-  const handleCancelAdd = () => {
-    setPendingSelection(null);
-    setIsModalOpen(false);
   };
 
-return (
-  <div className="relative">
-    {/* Updated hidden form wrapper layout to include execution actions */}
-    <form ref={formRef} method="POST" className="hidden">
-      <input type="hidden" name="ticker" />
-      <input type="hidden" name="_action" value="ADD" /> {/* <-- Added this line */}
-    </form>
-
+  return (
+    <div className="relative">
       <input 
         type="text" 
         value={inputValue}
@@ -148,7 +112,6 @@ return (
         className="w-full px-4 py-2 border border-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-800 text-sm"
       />
       
-      {/* Dropdown Menu Result Set */}
       {results.length > 0 && (
         <ul className="absolute z-40 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden max-h-60 overflow-y-auto">
           {results.map((item) => (
@@ -166,33 +129,14 @@ return (
         </ul>
       )}
 
-      {/* Confirmation Modal Overlay Component Blocks */}
       {isModalOpen && pendingSelection && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-sm bg-white rounded-xl shadow-xl border border-slate-100 p-5 space-y-4 transform transition-all scale-100">
-            <div className="space-y-2">
-              <h3 className="text-base font-semibold text-slate-900">Add to Watchlist?</h3>
-              <p className="text-sm text-slate-500">
-                Are you sure you want to add{' '}
-                <strong className="text-slate-800">{pendingSelection.symbol}</strong> ({pendingSelection.fullName})
-                to the watchlist?
-              </p>
-            </div>
-            
-            <div className="flex items-center justify-end space-x-2 text-sm font-medium pt-2">
-              <button
-                type="button"
-                onClick={handleCancelAdd}
-                className="px-4 py-2 text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmAdd}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm transition"
-              >
-                Add
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="w-full max-w-sm bg-white rounded-xl shadow-xl p-5 space-y-4">
+            <h3 className="text-base font-semibold text-slate-900">Add {pendingSelection.symbol}?</h3>
+            <div className="flex justify-end space-x-2">
+              <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-slate-500">Cancel</button>
+              <button onClick={handleConfirmAdd} disabled={isSubmitting} className="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                {isSubmitting ? 'Adding...' : 'Add'}
               </button>
             </div>
           </div>
