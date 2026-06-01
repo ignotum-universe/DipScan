@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react';
-// Imports are now processed at build time by Vite
+import { useState } from 'react';
 import secDataRaw from '../data/company_tickers.json';
 import etfDataRaw from '../data/etf_tickers.json';
 
+// 1. Define the interfaces at the top level
 interface SECTickerItem {
   cik_str: number;
   ticker: string;
@@ -14,28 +14,30 @@ interface NormalizedTicker {
   fullName: string;
 }
 
-// Transform the data once outside the component to keep memory usage stable
-const tickerDatabase: NormalizedTicker[] = useMemo(() => {
+// 2. Use the interface in your helper function
+const prepareDatabase = (): NormalizedTicker[] => {
   const secData = secDataRaw as Record<string, SECTickerItem>;
   const etfData = etfDataRaw as NormalizedTicker[];
 
-  const secNormalized = Object.values(secData).map((item) => ({
+  const secNormalized: NormalizedTicker[] = Object.values(secData).map((item) => ({
     symbol: String(item.ticker || '').toUpperCase().trim(),
     fullName: String(item.title || '').trim()
   }));
 
   const combined = [...secNormalized, ...etfData].filter(item => item.symbol);
   
-  // Dedupe
   const seen = new Set<string>();
   return combined.filter(item => {
     if (seen.has(item.symbol)) return false;
     seen.add(item.symbol);
     return true;
   });
-}, []);
+};
+
+const tickerDatabase = prepareDatabase();
 
 export default function StockSearch() {
+  // Now TypeScript knows exactly what NormalizedTicker is
   const [results, setResults] = useState<NormalizedTicker[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
