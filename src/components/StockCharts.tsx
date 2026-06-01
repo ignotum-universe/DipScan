@@ -206,7 +206,7 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
   }, [filteredData]);
 
   return (
-  <div className="w-full h-auto bg-[#0f172a] p-5 pb-0 rounded-xl md:p-5 min-h-[500px]">
+  <div className="w-full h-auto bg-[#0f172a] p-5 pb-0 rounded-xl md:p-5 min-h-[350px]">
     {/* Timeframe Buttons */}
     <div className="flex gap-2 mb-5 flex-wrap">
       {(['1M', '3M', '6M', 'YTD', '1Y', 'ALL'] as Timeframe[]).map((tf) => (

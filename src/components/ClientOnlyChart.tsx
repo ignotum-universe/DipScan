@@ -11,7 +11,7 @@ export default function ClientOnlyChart(props: any) {
 
   if (!isMounted) {
     // Render a skeleton or nothing during SSR
-    return <div className="h-64 animate-pulse bg-gray-200">Loading chart...</div>;
+    return <div className="h-64 animate-pulse bg-[#0f172a]">Loading chart...</div>;
   }
 
   // Only render the actual chart once in the browser
