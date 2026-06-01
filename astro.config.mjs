@@ -1,15 +1,14 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
-import vercel from '@astrojs/vercel'; // Use the main package
-import tailwindcss from '@tailwindcss/vite';
+import vercel from '@astrojs/vercel';
+import tailwindcss from '@tailwindcss/vite'; // This is fine if you are using the new Tailwind Vite integration
 
 export default defineConfig({
   output: 'server',
   adapter: vercel({
-    // Explicitly set this to resolve the warning you saw
-    entrypointResolution: 'auto' 
+    entrypointResolution: 'auto'
   }),
-  integrations: [react()],
+  integrations: [react()], // This replaces the need for @vitejs/plugin-react
   vite: {
     ssr: {
       noExternal: ['fast-technical-indicators']
