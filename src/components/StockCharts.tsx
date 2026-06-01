@@ -72,6 +72,7 @@ const series = useMemo(() => [
 ], [filteredData]);
 
   const options: ApexCharts.ApexOptions = {
+    
   chart: {
     type: 'candlestick',
     width: '100%',
@@ -145,13 +146,14 @@ const series = useMemo(() => [
   },
   },
   tooltip: {
-    shared: true,
-    intersect: false,
-    x: {
-      formatter: (_val: number, opts: any) =>
-        opts?.w?.globals?.categoryLabels?.[_val - 1] ?? String(_val)
-    }
-  },
+  custom: ({ series, seriesIndex, dataPointIndex, w }) => {
+    // Access the price data directly
+    const price = series[0][dataPointIndex];
+    return `<div class="p-2 bg-[#0f172a] border border-slate-700 text-slate-100">
+              Price: <strong>$${price.toFixed(2)}</strong>
+            </div>`;
+  }
+},
   plotOptions: {
     candlestick: {
       colors: { upward: '#34d399', downward: '#f87171' }
@@ -175,29 +177,31 @@ const latestPrice = useMemo(() => {
 const isLoaded = series.length > 0 && series[0].data.length > 0;
 
 return (
-  <div className="w-full h-auto bg-[#0f172a] p-5 pb-0 rounded-xl md:p-5">
-    {/* Timeframe Buttons */}
-    <div className="flex gap-2 mb-5 flex-wrap">
-      {(['1M', '3M', '6M', 'YTD', '1Y', 'ALL'] as Timeframe[]).map((tf) => (
-        <button
-          key={tf}
-          onClick={() => setTimeframe(tf)}
-          className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition ${
-            timeframe === tf ? 'bg-sky-400 text-slate-900' : 'bg-slate-800 text-slate-400'
-          }`}
-        >
-          {tf}
-        </button>
-      ))}
-    </div>
+    <div className="w-full h-auto bg-[#0f172a] p-5 pb-0 rounded-xl md:p-5">
+      <div className="flex gap-2 mb-5 flex-wrap">
+        {(['1M', '3M', '6M', 'YTD', '1Y', 'ALL'] as Timeframe[]).map((tf) => (
+          <button
+            key={tf}
+            onClick={() => setTimeframe(tf)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition ${
+              timeframe === tf ? 'bg-sky-400 text-slate-900' : 'bg-slate-800 text-slate-400'
+            }`}
+          >
+            {tf}
+          </button>
+        ))}
+      </div>
 
     {/* Header */}
-    <h3 className="text-slate-100 text-lg mb-2 flex items-center gap-3">
-      <span className="font-bold">{ticker}:</span>
-      {latestPrice !== null && (
-        <span className="text-emerald-400 font-mono">${latestPrice.toFixed(2)}</span>
-      )}
-    </h3>
+     <h3 className="text-slate-100 text-lg mb-2 flex items-center gap-3">
+    <span className="font-bold">{ticker}:</span>
+    {latestPrice !== null && (
+      <span className="text-emerald-400">
+        ${latestPrice.toFixed(2)}
+      </span>
+    )}
+
+  </h3>
 
     {/* Chart Container - Persistent mounting to prevent layout shifts */}
     <div className="w-full aspect-4/3 md:aspect-auto md:h-[400px] relative bg-[#0f172a] rounded-lg overflow-hidden">

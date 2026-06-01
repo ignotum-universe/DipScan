@@ -18,3 +18,8 @@ background-color: #F5F5F5;
   letter-spacing: 0.08em;
 }
 
+.apexcharts-canvas,
+.apexcharts-svg {
+  background-color: #0f172a !important;
+}
+
