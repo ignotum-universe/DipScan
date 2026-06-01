@@ -25,7 +25,7 @@ const prepareDatabase = (): NormalizedTicker[] => {
   }));
 
   const combined = [...secNormalized, ...etfData].filter(item => item.symbol);
-  
+
   const seen = new Set<string>();
   return combined.filter(item => {
     if (seen.has(item.symbol)) return false;
@@ -47,7 +47,7 @@ export default function StockSearch() {
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value.toUpperCase().trim();
     setInputValue(e.target.value);
-    
+
     if (!query) {
       setResults([]);
       return;
@@ -93,7 +93,7 @@ export default function StockSearch() {
       window.dispatchEvent(new CustomEvent('watchlist-updated', {
         detail: { ticker: pendingSelection.symbol }
       }));
-      
+
       setIsModalOpen(false);
       setPendingSelection(null);
     } catch (err) {
@@ -106,14 +106,14 @@ export default function StockSearch() {
 
   return (
     <div className="relative">
-      <input 
-        type="text" 
+      <input
+        type="text"
         value={inputValue}
-        onChange={handleSearch} 
-        placeholder="Search ticker or company..." 
+        onChange={handleSearch}
+        placeholder="Search ticker or company..."
         className="w-full px-4 py-2 border border-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-800 text-sm"
       />
-      
+
       {results.length > 0 && (
         <ul className="absolute z-40 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden max-h-60 overflow-y-auto">
           {results.map((item) => (
