@@ -99,8 +99,8 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
         }
       },
       theme: {
-    mode: 'dark', 
-  },
+        mode: 'dark',
+      },
     },
 
     responsive: [
@@ -114,19 +114,33 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
               autoSelected: 'pan',  // ← drag = pan on mobile
             },
           },
+          tooltip: {
+            shared: true,
+            intersect: false,
+            fixed: {
+              enabled: true,         // ← Locks the tooltip in a fixed position
+              position: 'topRight',  // ← Positions it out of the way in the top corner
+              offsetX: -10,
+              offsetY: -40,          // ← Adjust this so it sits cleanly near or above the legend
+            },
+          },
           xaxis: {
             tickAmount: 5,              // ← fewer labels so they don't crowd
           },
           yaxis: {
+            tooltip: { enabled: true },
+            decimalsInFloat: 2,
             labels: {
-              offsetX: -15,   // ← tighter on mobile
-              style: {
-                fontSize: '10px',  // ← smaller font = less reserved width
-              },
+              offsetX: -10,
             },
+            // 👇 ADD THESE TO STRETCH THE BARS VERTICALLY
+            forceNiceScale: true,  // Automatically scales the grid nicely
+            min: (min) => min * 0.99, // Gives a tiny 1% padding at the bottom instead of the default huge gap
+            max: (max) => max * 1.01, // Gives a tiny 1% padding at the top
           },
           stroke: {
-            width: [1, 1.5, 1.5],      // ← thinner lines on small screens
+            // Candlestick = 1px, SMA 200 = 0px (hidden), Rolling VWAP = 0px (hidden)
+            width: [1, 0, 0],
           },
           markers: {
             size: 0, // Set to 0 if you don't want dots, or >0 if you want them visible
@@ -198,7 +212,7 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
       labels: { colors: '#94a3b8' },
       offsetY: 0,
     }
- }), []);
+  }), []);
 
   const latestPrice = useMemo(() => {
     if (filteredData.length === 0) return null;
@@ -206,45 +220,44 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
   }, [filteredData]);
 
   return (
-  <div className="w-full h-auto bg-[#0f172a] p-5 pb-0 rounded-xl md:p-5 min-h-[350px]">
-    {/* Timeframe Buttons */}
-    <div className="flex gap-2 mb-5 flex-wrap">
-      {(['1M', '3M', '6M', 'YTD', '1Y', 'ALL'] as Timeframe[]).map((tf) => (
-        <button
-          key={tf}
-          onClick={() => setTimeframe(tf)}
-          className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition ${
-            timeframe === tf ? 'bg-sky-400 text-slate-900' : 'bg-slate-800 text-slate-400'
-          }`}
-        >
-          {tf}
-        </button>
-      ))}
-    </div>
+    <div className="w-full h-auto bg-[#0f172a] p-2 sm:p-5 pb-0 rounded-xl min-h-[400px]">
+      {/* Timeframe Buttons */}
+      <div className="flex gap-2 mb-5 flex-wrap">
+        {(['1M', '3M', '6M', 'YTD', '1Y', 'ALL'] as Timeframe[]).map((tf) => (
+          <button
+            key={tf}
+            onClick={() => setTimeframe(tf)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition ${timeframe === tf ? 'bg-sky-400 text-slate-900' : 'bg-slate-800 text-slate-400'
+              }`}
+          >
+            {tf}
+          </button>
+        ))}
+      </div>
 
-    {/* Header */}
-    <h3 className="text-slate-100 text-lg mb-2 flex items-center gap-3">
-      <span className="font-bold">{ticker}:</span>
-      {latestPrice !== null && (
-        <span className="text-emerald-400">${latestPrice.toFixed(2)}</span>
-      )}
-    </h3>
-
-    {/* Chart Container */}
-    <div className="w-full aspect-4/3 md:aspect-auto md:h-[400px] relative bg-[#0f172a] rounded-lg overflow-hidden">
-      {/* Chart Wrapper: Will swap seamlessly with the dynamic fallback engine */}
-      <div className="w-full h-full bg-[#0f172a]">
-        {hasMounted && (
-          <ReactApexChart 
-            options={options} 
-            series={series} 
-            type="candlestick" 
-            height="100%" 
-            width="100%"
-          />
+      {/* Header */}
+      <h3 className="text-slate-100 text-lg mb-2 flex items-center gap-3">
+        <span className="font-bold">{ticker}:</span>
+        {latestPrice !== null && (
+          <span className="text-emerald-400">${latestPrice.toFixed(2)}</span>
         )}
+      </h3>
+
+      {/* Chart Container */}
+      <div className="w-full aspect-4/3 md:aspect-auto md:h-[400px] relative bg-[#0f172a] rounded-lg overflow-hidden">
+        {/* Chart Wrapper: Will swap seamlessly with the dynamic fallback engine */}
+        <div className="w-full h-full bg-[#0f172a]">
+          {hasMounted && (
+            <ReactApexChart
+              options={options}
+              series={series}
+              type="candlestick"
+              height="100%"
+              width="100%"
+            />
+          )}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
 }
