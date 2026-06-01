@@ -323,6 +323,7 @@ export default function TickerCard({ ticker, data }: TickerCardProps) {
     const isCoolingOff = zScore < 1.0 && zScore > 0;
 
     if (wasInBreakout && isCoolingOff) {
+      inPriceDiscovery = false;
       return "Post-Momentum Consolidation";
     }
     const momentumStrength = (zScore > 1.5 ? 2 : (zScore > 1.0 ? 1 : 0));
