@@ -526,13 +526,13 @@ export default function TickerCard({ ticker, data }: TickerCardProps) {
 
   return (
     <>
-      <div className={cardClassString + " dark:bg-slate-800 dark:border-slate-700"} onClick={() => setShowModal(true)}>
-        <h2 className="text-xl font-bold tracking-tight text-gray-900 mb-1 dark:text-white">{ticker}</h2>
-        <p className="text-sm text-gray-600 dark:text-slate-400 font-semibold mb-1">
+      <div className={cardClassString} onClick={() => setShowModal(true)}>
+        <h2 className="text-xl font-bold tracking-tight text-gray-900 mb-1 ">{ticker}</h2>
+        <p className="text-sm text-gray-600  font-semibold mb-1">
           Status: <span className={inPriceDiscovery ? "text-amber-700 font-bold" : "text-gray-900"}>{status}</span>
         </p>
-        <p className="text-sm font-medium text-gray-700 dark:text-slate-300">Current price: <span className="font-semibold">${latestPrice.toFixed(2)}</span></p>
-        <span className="inline-block mt-1 text-xs px-2 py-0.5 font-mono bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 rounded">
+        <p className="text-sm font-medium text-gray-700 ">Current price: <span className="font-semibold">${latestPrice.toFixed(2)}</span></p>
+        <span className="inline-block mt-1 text-xs px-2 py-0.5 font-mono bg-gray-100  text-gray-600  rounded">
           {zScoreBadge.label}
         </span>
 
@@ -540,21 +540,21 @@ export default function TickerCard({ ticker, data }: TickerCardProps) {
         <div className="border-t border-gray-100 pt-3 mt-3 space-y-2">
           {inPriceDiscovery ? (
             <>
-              <div className="bg-red-50/60 border border-red-100 dark:border-red-900/40 p-3 rounded-lg text-xs space-y-1.5">
-                <div className="flex justify-between items-center text-red-800 dark:text-red-400 font-bold uppercase text-[10px]">
+              <div className="bg-red-50/60 border border-red-100 p-3 rounded-lg text-xs space-y-1.5">
+                <div className="flex justify-between items-center text-red-800 font-bold uppercase text-[10px]">
                   <span>🚨 CAUTION: Currently in price discovery</span>
                 </div>
-                <p className="text-red-900 dark:text-red-200 leading-relaxed font-medium">{strategyMessage}</p>
+                <p className="text-red-900 leading-relaxed font-medium">{strategyMessage}</p>
                 <div className="text-[11px] text-red-600 italic font-medium text-center border-t border-red-200/40 pt-1.5">
                   "The market is repricing this asset in real time. Until it finds a level, there is no predictable entry point."
                 </div>
               </div>
               {topNodes.length > 0 && (
                 <div className="pt-1">
-                  <span className="text-[11px] font-medium text-gray-400 dark:text-slate-500">Historical anchors:</span>
+                  <span className="text-[11px] font-medium text-gray-400">Historical anchors:</span>
                   <div className="flex flex-wrap gap-1.5 mt-1">
                     {[...topNodes].sort((a, b) => a.priceBin - b.priceBin).slice(0, 3).map((node, idx) => (
-                      <span key={idx} className="bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 text-[11px] font-mono px-2 py-0.5 rounded-md">
+                      <span key={idx} className="bg-gray-50 border-gray-200 text-gray-700 text-[11px] font-mono px-2 py-0.5 rounded-md">
                         ${node.priceBin.toFixed(2)}
                       </span>
                     ))}
@@ -564,39 +564,39 @@ export default function TickerCard({ ticker, data }: TickerCardProps) {
             </>
           ) : (
             <>
-              <div className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase">VPVR Order Levels</div>
-              <div className="flex justify-between items-center text-xs text-gray-600 dark:text-slate-400">
+              <div className="text-[10px] font-bold text-gray-400 uppercase">VPVR Order Levels</div>
+              <div className="flex justify-between items-center text-xs text-gray-600">
                 <span>🎯 Most Traded Price:</span>
-                <span className="font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded">${pocPrice.toFixed(2)}</span>
+                <span className="font-mono font-bold text-blue-600 bg-blue-50/50 px-1.5 py-0.5 rounded">${pocPrice.toFixed(2)}</span>
               </div>
 
               {suggestedBuyLimit && (
-                <div className="flex justify-between bg-blue-50/70 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 px-2.5 py-1 rounded-md text-xs items-center">
-                  <span className="text-blue-700 dark:text-blue-300 font-medium">🛒 Suggested Entry Limit:</span>
-                  <span className="font-mono font-bold text-blue-700 dark:text-blue-300 text-sm">${suggestedBuyLimit.toFixed(2)}</span>
+                <div className="flex justify-between bg-blue-50/70 border border-blue-100 px-2.5 py-1 rounded-md text-xs items-center">
+                  <span className="text-blue-700 font-medium">🛒 Suggested Entry Limit:</span>
+                  <span className="font-mono font-bold text-blue-700 text-sm">${suggestedBuyLimit.toFixed(2)}</span>
                 </div>
               )}
 
               {(bluebox === true) ? (
                 // STYLE A: Blue Box for Overextended Statuses
-                <div className="bg-blue-50/70 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 px-2.5 py-1 rounded-md text-xs items-center">
-                  <p className="text-blue-800 dark:text-blue-200 font-medium leading-relaxed">
+                <div className="bg-blue-50/70 border border-blue-100 px-2.5 py-1 rounded-md text-xs items-center">
+                  <p className="text-blue-800 font-medium leading-relaxed">
                     {strategyMessage}
                   </p>
                 </div>
               ) : (
                 // STYLE B: Your original, plain text styling for all other statuses
-                <p className="text-[11px] text-gray-500 dark:text-slate-500 italic font-medium pt-0.5 leading-relaxed">
+                <p className="text-[11px] text-gray-500 italic font-medium pt-0.5 leading-relaxed">
                   {strategyMessage}
                 </p>
               )}
 
               {topNodes.length > 0 && (
                 <div className="pt-1">
-                  <span className="text-[11px] font-medium text-gray-400 dark:text-slate-500">Historical anchors:</span>
+                  <span className="text-[11px] font-medium text-gray-400 ">Historical anchors:</span>
                   <div className="flex flex-wrap gap-1.5 mt-1">
                     {[...topNodes].sort((a, b) => a.priceBin - b.priceBin).slice(0, 3).map((node, idx) => (
-                      <span key={idx} className="bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 text-[11px] font-mono px-2 py-0.5 rounded-md">
+                      <span key={idx} className="bg-gray-50  border-gray-200 da text-gray-700 da text-[11px] font-mono px-2 py-0.5 rounded-md">
                         ${node.priceBin.toFixed(2)}
                       </span>
                     ))}
