@@ -83,6 +83,7 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
       type: 'candlestick',
       width: '100%',
       height: '100%',
+      background: '#0f172a',
       toolbar: { show: false },
       zoom: {
         enabled: true,
@@ -96,7 +97,10 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
         beforeZoom: (_ctx: any, _opts: any): boolean => {
           return false; // ← returning false cancels the zoom entirely on mobile
         }
-      }
+      },
+      theme: {
+    mode: 'dark', 
+  },
     },
 
     responsive: [
@@ -173,10 +177,7 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
         if (!candle) return '';
 
         return `
-      <div class="p-3 bg-[#0f172a] border border-slate-700 text-slate-100 text-xs shadow-xl">
-        <div class="mb-1 border-b border-slate-600 pb-1 font-bold">
-          ${w.globals.labels[dataPointIndex]}
-        </div>
+      <div class="p-3 bg-slate-100 text-black text-xs">
         <div>Price: <span class="text-emerald-400 font-bold">$${candle.toFixed(2)}</span></div>
         ${vwap !== null ? `<div>VWAP: <span class="text-indigo-400 font-bold">$${vwap.toFixed(2)}</span></div>` : ''}
         ${sma !== null ? `<div>SMA 200: <span class="text-yellow-400 font-bold">$${sma.toFixed(2)}</span></div>` : ''}
@@ -205,54 +206,45 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
   }, [filteredData]);
 
   return (
-    <div className="w-full h-auto bg-[#0f172a] p-5 pb-0 rounded-xl md:p-5 min-h-[500px]">
-      {/* Timeframe Buttons */}
-      <div className="flex gap-2 mb-5 flex-wrap">
-        {(['1M', '3M', '6M', 'YTD', '1Y', 'ALL'] as Timeframe[]).map((tf) => (
-          <button
-            key={tf}
-            onClick={() => setTimeframe(tf)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition ${
-              timeframe === tf ? 'bg-sky-400 text-slate-900' : 'bg-slate-800 text-slate-400'
-            }`}
-          >
-            {tf}
-          </button>
-        ))}
-      </div>
+  <div className="w-full h-auto bg-[#0f172a] p-5 pb-0 rounded-xl md:p-5 min-h-[500px]">
+    {/* Timeframe Buttons */}
+    <div className="flex gap-2 mb-5 flex-wrap">
+      {(['1M', '3M', '6M', 'YTD', '1Y', 'ALL'] as Timeframe[]).map((tf) => (
+        <button
+          key={tf}
+          onClick={() => setTimeframe(tf)}
+          className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition ${
+            timeframe === tf ? 'bg-sky-400 text-slate-900' : 'bg-slate-800 text-slate-400'
+          }`}
+        >
+          {tf}
+        </button>
+      ))}
+    </div>
 
-      {/* Header */}
-      <h3 className="text-slate-100 text-lg mb-2 flex items-center gap-3">
-        <span className="font-bold">{ticker}:</span>
-        {latestPrice !== null && (
-          <span className="text-emerald-400">${latestPrice.toFixed(2)}</span>
+    {/* Header */}
+    <h3 className="text-slate-100 text-lg mb-2 flex items-center gap-3">
+      <span className="font-bold">{ticker}:</span>
+      {latestPrice !== null && (
+        <span className="text-emerald-400">${latestPrice.toFixed(2)}</span>
+      )}
+    </h3>
+
+    {/* Chart Container */}
+    <div className="w-full aspect-4/3 md:aspect-auto md:h-[400px] relative bg-[#0f172a] rounded-lg overflow-hidden">
+      {/* Chart Wrapper: Will swap seamlessly with the dynamic fallback engine */}
+      <div className="w-full h-full bg-[#0f172a]">
+        {hasMounted && (
+          <ReactApexChart 
+            options={options} 
+            series={series} 
+            type="candlestick" 
+            height="100%" 
+            width="100%"
+          />
         )}
-      </h3>
-
-      {/* Chart Container */}
-      <div className="w-full aspect-4/3 md:aspect-auto md:h-[400px] relative bg-[#0f172a] rounded-lg overflow-hidden">
-        
-        {/* 3. True Loading Overlay linked to mounting status */}
-        {!hasMounted && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0f172a]">
-            <p className="text-slate-500 animate-pulse">Loading chart data...</p>
-          </div>
-        )}
-
-        {/* Chart Wrapper */}
-        <div className={`w-full h-full transition-opacity duration-300 ${hasMounted ? 'opacity-100' : 'opacity-0'}`}>
-          {hasMounted && (
-            <ReactApexChart 
-              // 4. REMOVED key={JSON.stringify(filteredData)} to stop the violent re-mounts
-              options={options} 
-              series={series} 
-              type="candlestick" 
-              height="100%" 
-              width="100%"
-            />
-          )}
-        </div>
       </div>
     </div>
-  );
+  </div>
+);
 }
