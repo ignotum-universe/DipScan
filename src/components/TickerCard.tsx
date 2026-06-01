@@ -170,7 +170,7 @@ export default function TickerCard({ ticker, data }: TickerCardProps) {
     const slicedData200D = data.chartData.slice(0, 200);
     const price200DaysAgo = slicedData200D[slicedData200D.length - 1].close_price || 1;
 
-    // A. CORE METRICS ENGINE
+    // A. CORE METRICS ENGINEe
     const prices200D = slicedData200D.map(d => d.close_price);
     const maxPrice200D = Math.max(...prices200D);
     const macroReturn200D = (latestPrice - price200DaysAgo) / price200DaysAgo;
