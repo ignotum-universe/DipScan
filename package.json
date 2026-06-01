@@ -12,9 +12,24 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/node": "^10.1.1",
+    "@astrojs/react": "^5.0.4",
     "@supabase/supabase-js": "^2.105.4",
+    "@tailwindcss/vite": "^4.3.0",
+    "@types/react-dom": "^19.2.3",
+    "apexcharts": "^5.13.0",
     "astro": "^6.3.1",
+    "fast-technical-indicators": "^1.1.4",
+    "lightweight-charts": "^5.2.0",
+    "react": "^19.2.6",
+    "react-apexcharts": "^2.1.0",
+    "react-dom": "^19.2.6",
     "recharts": "^3.8.1",
-    "trading-signals": "^7.4.3"
+    "tailwindcss": "^4.3.0",
+    "trading-signals": "^7.4.3",
+    "yahoo-finance2": "^3.14.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14"
   }
 }

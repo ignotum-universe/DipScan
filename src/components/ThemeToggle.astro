@@ -1,0 +1,41 @@
+---
+---
+<button id="theme-toggle" class="p-2 rounded-lg bg-slate-200 dark:bg-slate-700 transition-colors">
+  <span class="dark:hidden">🌙</span>
+  <span class="hidden dark:inline">☀️</span>
+</button>
+
+<script is:inline>
+  // 1. Check for dark mode preference
+  const theme = (() => {
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+      return localStorage.getItem('theme');
+    }
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    return 'light';
+  })();
+  
+  if (theme === 'light') {
+    document.documentElement.classList.remove('dark');
+  } else {
+    document.documentElement.classList.add('dark');
+  }
+
+  // 2. Toggle functionality
+  const btn = document.getElementById('theme-toggle');
+
+btn.addEventListener('click', () => {
+  const root = document.documentElement;
+  
+  // Toggle the class
+  root.classList.toggle('dark');
+  
+  // Persist the state
+  const isDark = root.classList.contains('dark');
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  
+  console.log("Dark class present:", root.classList.contains('dark'));
+});
+</script>
