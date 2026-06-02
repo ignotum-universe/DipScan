@@ -189,46 +189,65 @@ const tickerDataMap: StructuralTickerItem[] = watchlist.map((symbol) => ({
   }
 
   async function hydrateSkeletons() {
+    // 1. Find all active skeleton cards on the page
     const lazyCards = document.querySelectorAll<HTMLElement>('[data-lazy-ticker]');
+    if (lazyCards.length === 0) return;
+
     const token = localStorage.getItem('tiingo_token');
 
-    // Process every skeleton element concurrently
-    Array.from(lazyCards).forEach(async (card) => {
-      const ticker = card.getAttribute('data-lazy-ticker');
-      if (!ticker) return;
+    // 2. Extract the ticker strings into a clean array: ["GDX", "GOOG", "VOO", "CHA"]
+    const tickers = Array.from(lazyCards)
+      .map(card => card.getAttribute('data-lazy-ticker'))
+      .filter(Boolean);
 
-      const mountPoint = card.querySelector<HTMLElement>('.ticker-card-mount');
-      const deleteBtn = card.querySelector<HTMLButtonElement>('.delete-btn');
+    try {
+      // 3. Fire ONE single batch request to your new Astro API route
+      const res = await fetch('/api/batch-cards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tickers, token })
+      });
 
-      try {
-        // Fetch calculations. This is where your API runs its 5-minute slice checks!
-        const res = await fetch(`/api/card/${ticker}`, {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        });
+      if (!res.ok) throw new Error('Batch network calculation failed.');
+      
+      // Destructure the unified results map
+      const { results } = await res.json(); 
 
-        if (!res.ok) throw new Error(`Failed to pull data context for ${ticker}`);
-        const { data } = await res.json();
+      // 4. Iterate back through your cards and pop the React components into place natively
+      lazyCards.forEach((card) => {
+        const ticker = card.getAttribute('data-lazy-ticker');
+        if (!ticker || !results[ticker]) return;
+
+        const mountPoint = card.querySelector<HTMLElement>('.ticker-card-mount');
+        const deleteBtn = card.querySelector<HTMLButtonElement>('.delete-btn');
 
         if (mountPoint) {
-          // Mount React component and unmask delete button safely
           const root = createRoot(mountPoint);
-          root.render(createElement(TickerCard, { ticker, data }));
+          
+          // Render your React TickerCard into the pre-existing skeleton box
+          root.render(createElement(TickerCard, { ticker, data: results[ticker] }));
+          
+          // Reveal your delete button now that the card is fully active
           deleteBtn?.classList.remove('hidden');
         }
-      } catch (error) {
-        console.error(`Hydration interruption on target: ${ticker}`, error);
-        // Fallback: Replace animated pulse with a minor failure notice card
+      });
+
+    } catch (error) {
+      console.error('⚠️ Batch hydration process was interrupted:', error);
+      
+      // Fallback: Clear the spinning animation and display a clean error state if things break
+      lazyCards.forEach((card) => {
+        const mountPoint = card.querySelector<HTMLElement>('.ticker-card-mount');
         if (mountPoint) {
           mountPoint.innerHTML = `
-            <div class="p-5 h-full rounded-xl border border-rose-100 bg-rose-50/50 flex flex-col justify-center items-center text-center p-4">
-              <span class="text-xs font-semibold text-rose-600">Offline</span>
-              <span class="text-[11px] text-slate-400 mt-0.5">Could not scan ${ticker}</span>
+            <div class="p-5 h-full rounded-xl border border-rose-100 bg-rose-50/50 flex flex-col justify-center items-center text-center">
+              <span class="text-xs font-semibold text-rose-600">Sync Error</span>
             </div>
           `;
         }
-      }
-    });
+      });
   }
+}
 
   function showInvalidKey(btn: HTMLButtonElement, originalText: string) {
   btn.textContent = "Enter a Valid Key";
