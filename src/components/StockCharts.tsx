@@ -69,7 +69,15 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
         x: d.trading_date,
         y: d.rollingVwap ?? null
       }))
-    }
+    },
+    {
+    name: 'Close Price (Line)',
+    type: 'line',
+    data: filteredData.map(d => ({
+      x: d.trading_date,
+      y: d.close_price
+    }))
+  }
   ], [filteredData]);
 
   const options: ApexCharts.ApexOptions = useMemo(() => ({
@@ -113,8 +121,8 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
             },
           },
           tooltip: {
-            shared: true,
-            intersect: false,
+            shared: false,
+            intersect: true,
             fixed: {
               enabled: true,         // ← Locks the tooltip in a fixed position
               position: 'topRight',  // ← Positions it out of the way in the top corner
@@ -138,7 +146,7 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
           },
           stroke: {
             // Candlestick = 1px, SMA 200 = 0px (hidden), Rolling VWAP = 0px (hidden)
-            width: [1, 0, 0],
+            width: [1, 0, 0, 1.5],
           },
           markers: {
             size: 0, // Set to 0 if you don't want dots, or >0 if you want them visible
@@ -151,9 +159,9 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
     ],
     stroke: {
       // Index order matches series order: candlestick, SMA200, VWAP
-      width: [1, 2, 2],
+      width: [1, 2, 2, 2],
       curve: 'smooth',
-      dashArray: [0, 0, 4]  // VWAP gets a dashed line to distinguish it
+      dashArray: [0, 0, 4, 0]  // VWAP gets a dashed line to distinguish it
     },
     xaxis: {
       type: 'category',
@@ -189,7 +197,7 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
         colors: { upward: '#34d399', downward: '#f87171' }
       }
     },
-    colors: ['transparent', '#facc15', '#818cf8'], // candle color handled by plotOptions; SMA=yellow, VWAP=purple
+    colors: ['transparent', '#facc15', '#818cf8', '#38bdf8'], // candle color handled by plotOptions; SMA=yellow, VWAP=purple
     legend: {
       show: true,
       position: 'top',        // ← moves it above the chart, never overlaps
@@ -231,7 +239,7 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
 
 
       {/* Chart Container */}
-      <div className="w-full h-[300px] md:h-[400px] relative bg-[#0f172a] rounded-lg overflow-hidden">
+      <div className="w-full h-[250px] md:h-[400px] relative bg-[#0f172a] rounded-lg overflow-hidden">
         {/* Chart Wrapper: Will swap seamlessly with the dynamic fallback engine */}
         <div className="w-full h-full bg-[#0f172a]">
             <ReactApexChart

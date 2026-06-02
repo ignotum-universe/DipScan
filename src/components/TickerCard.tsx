@@ -550,15 +550,15 @@ export default function TickerCard({ ticker, data }: TickerCardProps) {
                 </div>
                 <p className="text-red-900 leading-relaxed font-medium">{strategyMessage}</p>
                 <div className="text-[11px] text-red-600 italic font-medium text-center border-t border-red-200/40 pt-1.5">
-                  "The market is repricing this asset in real time. Until it finds a level, there is no predictable entry point."
+                  "The market is repricing this asset. Until it finds a level, there is no predictable entry point."
                 </div>
               </div>
               {topNodes.length > 0 && (
                 <div className="pt-1">
-                  <span className="text-[11px] font-medium text-gray-400">Historical anchors:</span>
+                  <span className="text-[11px] font-medium text-gray-600">Historical anchors:</span>
                   <div className="flex flex-wrap gap-1.5 mt-1">
                     {[...topNodes].sort((a, b) => a.priceBin - b.priceBin).slice(0, 3).map((node, idx) => (
-                      <span key={idx} className="bg-gray-50 border-gray-200 text-gray-700 text-[11px] font-mono px-2 py-0.5 rounded-md">
+                      <span key={idx} className="bg-gray-100 border-gray-200 text-gray-700 text-[11px] font-mono px-2 py-0.5 rounded-md">
                         ${node.priceBin.toFixed(2)}
                       </span>
                     ))}
@@ -600,7 +600,7 @@ export default function TickerCard({ ticker, data }: TickerCardProps) {
                   <span className="text-[11px] font-medium text-gray-400 ">Historical anchors:</span>
                   <div className="flex flex-wrap gap-1.5 mt-1">
                     {[...topNodes].sort((a, b) => a.priceBin - b.priceBin).slice(0, 3).map((node, idx) => (
-                      <span key={idx} className="bg-gray-50  border-gray-200 da text-gray-700 da text-[11px] font-mono px-2 py-0.5 rounded-md">
+                      <span key={idx} className="bg-gray-100  border-gray-200 da text-gray-700 da text-[11px] font-mono px-2 py-0.5 rounded-md">
                         ${node.priceBin.toFixed(2)}
                       </span>
                     ))}
