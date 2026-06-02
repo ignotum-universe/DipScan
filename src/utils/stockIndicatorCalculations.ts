@@ -656,43 +656,34 @@ export async function getBatchEnrichedStockData(tickers: string[], token: string
     }
   }}
 
-export async function getCalculatedTickerData(ticker: string) {
-  ticker = ticker.toUpperCase();
-
-  // ✅ Check only 1 row to see if it's still the same time slice, if so, then skip check
-  const cached = calculationCache.get(ticker);
-
-  // Check the single latest record timestamp to establish cache status
-  const { data: latestRow } = await supabase
-    .from('stock_ohlcv')
-    .select('updated_at')
-    .eq('ticker', ticker)
-    .order('trading_date', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const latestUpdatedAt = latestRow?.updated_at;
-
-  // Check structure bypassing execution safely on a cache match
-  if (cached && latestUpdatedAt && cached.updatedAt === latestUpdatedAt) {
-    console.log(`⚡ ${ticker} calculation grabbed from cache.`);
-    return cached.result;
-  }
-
-  // FETCH TARGET BLOCKS FROM DB
-  const { data: dbData } = await supabase
-    .from('stock_ohlcv')
-    .select('*')
-    .eq('ticker', ticker)
-    .order('trading_date', { ascending: false })
-    .limit(320);
-
+export function computeMetricsFromRows(dbData: any[]) {
   if (!dbData || dbData.length === 0) {
-    return { chartData: [], volumeProfile: { bins: [], poc: { price: 0, volume: 0 }, highVolumeNodes: [] }, anchorProfile: { bins: [], poc: { price: 0, volume: 0 }, highVolumeNodes: [] } };
+    return { 
+      chartData: [], 
+      volumeProfile: { bins: [], poc: { price: 0, volume: 0 }, highVolumeNodes: [] }, 
+      anchorProfile: { bins: [], poc: { price: 0, volume: 0 }, highVolumeNodes: [] },
+      volatilityGuard: { currentAtr: 0, atrRatio: 1, isCompressed: false }
+    };
   }
 
-  const calculationData = [...dbData].reverse();
-  const closePrices = calculationData.map(d => d.close_price);
+  // 1. Sort explicitly by date instead of relying on a raw array reverse. 
+  // This guarantees oldest data is at index 0, flowing forward in time.
+  const calculationData = [...dbData].sort(
+    (a, b) => new Date(a.trading_date).getTime() - new Date(b.trading_date).getTime()
+  );
+
+  // 2. Sanitize prices: Ensure strings from the DB are explicitly parsed to floats 
+  // and discard any corrupted or undefined records.
+  const closePrices = calculationData
+    .map(d => (typeof d.close_price === 'string' ? parseFloat(d.close_price) : d.close_price))
+    .filter(price => price !== null && price !== undefined && !isNaN(price));
+  
+  // 3. Prevent runtime errors if a stock somehow has less than 200 days of history
+  if (closePrices.length < 200) {
+    console.warn(`⚠️ Close prices length (${closePrices.length}) is insufficient for 200-day indicators.`);
+  }
+
+  // This will run cleanly and generate your indicators
   const rawSma200 = sma({ period: 200, values: closePrices });
 
   const sma200 = [
@@ -716,10 +707,8 @@ export async function getCalculatedTickerData(ticker: string) {
     atr: atrSequence[i]
   })).reverse();
 
-  // 1. Get the current ATR (the latest value)
   const currentAtr = atrSequence[atrSequence.length - 1] ?? 0;
 
-  // 2. Calculate the historical average ATR (e.g., over the last 50 days)
   const recentAtrValues = atrSequence
     .slice(-50)
     .filter((value): value is number => value !== null && value !== undefined);
@@ -727,26 +716,52 @@ export async function getCalculatedTickerData(ticker: string) {
     ? recentAtrValues.reduce((sum, value) => sum + value, 0) / recentAtrValues.length
     : 0;
 
-  // 3. Calculate ratio (current volatility vs historical)
   const atrRatio = historicalAtr > 0 ? currentAtr / historicalAtr : 1;
-
-  // 4. Determine if compressed (e.g., current ATR is low compared to historical)
   const isCompressed = currentAtr < historicalAtr * 0.8;
 
-  const result = {
+  return {
     chartData,
     volumeProfile: vpvrMetrics,
     anchorProfile: anchorMetrics,
-    // ADD THIS OBJECT
     volatilityGuard: {
       currentAtr,
       atrRatio,
       isCompressed
     }
   };
+}
 
-  // Assign clean timestamp back to cache
-  if (latestUpdatedAt) {
+export async function getCalculatedTickerData(ticker: string) {
+  ticker = ticker.toUpperCase();
+
+  const cached = calculationCache.get(ticker);
+
+  const { data: latestRow } = await supabase
+    .from('stock_ohlcv')
+    .select('updated_at')
+    .eq('ticker', ticker)
+    .order('trading_date', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const latestUpdatedAt = latestRow?.updated_at;
+
+  if (cached && latestUpdatedAt && cached.updatedAt === latestUpdatedAt) {
+    console.log(`⚡ ${ticker} calculation grabbed from cache.`);
+    return cached.result;
+  }
+
+  const { data: dbData } = await supabase
+    .from('stock_ohlcv')
+    .select('*')
+    .eq('ticker', ticker)
+    .order('trading_date', { ascending: false })
+    .limit(320);
+
+  // Call our clean extracted engine!
+  const result = computeMetricsFromRows(dbData || []);
+
+  if (latestUpdatedAt && dbData && dbData.length > 0) {
     calculationCache.set(ticker, { updatedAt: latestUpdatedAt, result });
     console.log(`🧮 ${ticker} calculated and cached.`);
   }
