@@ -28,11 +28,6 @@ type Timeframe = '1M' | '3M' | '6M' | 'YTD' | '1Y' | 'ALL';
 export default function StockCharts({ ticker, data }: StockChartsProps) {
   const [timeframe, setTimeframe] = useState<Timeframe>('ALL');
 
-  const [hasMounted, setHasMounted] = useState(false);
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
 
   const rawChartData = data?.chartData || [];
   const chronologicalData = useMemo(() => [...rawChartData].reverse(), [rawChartData]);
@@ -82,7 +77,7 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
     chart: {
       type: 'candlestick',
       width: '100%',
-      height: '100%',
+      height: 400,
       background: '#0f172a',
       toolbar: { show: false },
       zoom: {
@@ -92,6 +87,9 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
       },
       selection: {
         enabled: false,   // ← disables drag-select zoom
+      },
+      animations: {
+        enabled: false, // ← eliminates the resize/scale-in jump
       },
       events: {
         beforeZoom: (_ctx: any, _opts: any): boolean => {
@@ -176,29 +174,16 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
       },
     },
     tooltip: {
-      shared: true, // This enables the single vertical line/crosshair across all series
-      intersect: false, // Set to false to show tooltip even when not directly on the line
-      custom: ({ series, seriesIndex, dataPointIndex, w }) => {
-        // series[0] = Candlestick (which has 4 values: [O, H, L, C])
-        // series[1] = SMA 200
-        // series[2] = Rolling VWAP
-
-        const candle = series[0][dataPointIndex];
-        const sma = series[1][dataPointIndex];
-        const vwap = series[2][dataPointIndex];
-
-        // Check if we have valid data for this point
-        if (!candle) return '';
-
-        return `
-      <div class="p-3 bg-slate-100 text-black text-xs">
-        <div>Price: <span class="text-emerald-400 font-bold">$${candle.toFixed(2)}</span></div>
-        ${vwap !== null ? `<div>VWAP: <span class="text-indigo-400 font-bold">$${vwap.toFixed(2)}</span></div>` : ''}
-        ${sma !== null ? `<div>SMA 200: <span class="text-yellow-400 font-bold">$${sma.toFixed(2)}</span></div>` : ''}
+  custom: ({ series, dataPointIndex }) => {
+    const candle = series[0][dataPointIndex];
+    if (!candle) return '';
+    return `
+      <div class="p-2 text-slate-900 bg-white text-xs rounded">
+        <div>Price: <span class="font-bold">$${candle.toFixed(2)}</span></div>
       </div>
     `;
-      }
-    },
+  }
+},
     plotOptions: {
       candlestick: {
         colors: { upward: '#34d399', downward: '#f87171' }
@@ -220,7 +205,7 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
   }, [filteredData]);
 
   return (
-    <div className="w-full h-auto bg-[#0f172a] p-2 sm:p-5 pb-0 rounded-xl min-h-[400px]">
+    <div className="w-full h-auto bg-[#0f172a] p-2 sm:p-5 pb-0 rounded-xl min-h-[350px]">
       {/* Timeframe Buttons */}
       <div className="flex gap-2 mb-5 flex-wrap">
         {(['1M', '3M', '6M', 'YTD', '1Y', 'ALL'] as Timeframe[]).map((tf) => (
@@ -243,19 +228,20 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
         )}
       </h3>
 
+
+
       {/* Chart Container */}
-      <div className="w-full aspect-4/3 md:aspect-auto md:h-[400px] relative bg-[#0f172a] rounded-lg overflow-hidden">
+      <div className="w-full h-[300px] md:h-[400px] relative bg-[#0f172a] rounded-lg overflow-hidden">
         {/* Chart Wrapper: Will swap seamlessly with the dynamic fallback engine */}
         <div className="w-full h-full bg-[#0f172a]">
-          {hasMounted && (
             <ReactApexChart
+              key={ticker}  
               options={options}
               series={series}
               type="candlestick"
               height="100%"
               width="100%"
             />
-          )}
         </div>
       </div>
     </div>

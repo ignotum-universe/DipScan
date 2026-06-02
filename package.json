@@ -30,9 +30,11 @@
     "trading-signals": "^7.4.3",
     "yahoo-finance2": "^3.14.1"
   },
+  "overrides": {
+    "vite": "^7.0.0"
+  },
   "devDependencies": {
     "@types/node": "^25.9.1",
-    "@types/react": "^19.2.14",
-    "vite": "^8.0.16"
+    "@types/react": "^19.2.14"
   }
 }
