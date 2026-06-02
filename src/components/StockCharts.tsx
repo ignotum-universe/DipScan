@@ -70,14 +70,6 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
         y: d.rollingVwap ?? null
       }))
     },
-    {
-    name: 'Close Price (Line)',
-    type: 'line',
-    data: filteredData.map(d => ({
-      x: d.trading_date,
-      y: d.close_price
-    }))
-  }
   ], [filteredData]);
 
   const options: ApexCharts.ApexOptions = useMemo(() => ({
@@ -159,7 +151,7 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
     ],
     stroke: {
       // Index order matches series order: candlestick, SMA200, VWAP
-      width: [1, 2, 2, 2],
+      width: [1, 2, 2],
       curve: 'smooth',
       dashArray: [0, 0, 4, 0]  // VWAP gets a dashed line to distinguish it
     },
@@ -197,7 +189,7 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
         colors: { upward: '#34d399', downward: '#f87171' }
       }
     },
-    colors: ['transparent', '#facc15', '#818cf8', '#38bdf8'], // candle color handled by plotOptions; SMA=yellow, VWAP=purple
+    colors: ['transparent', '#facc15', '#818cf8'], // candle color handled by plotOptions; SMA=yellow, VWAP=purple
     legend: {
       show: true,
       position: 'top',        // ← moves it above the chart, never overlaps

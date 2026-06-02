@@ -398,7 +398,7 @@ try {
     wrapper.style.transform = 'scale(0.95)';
     const grid = document.querySelector('.ticker-grid');
     if (!grid) return;
-    grid.appendChild(wrapper);
+    grid.insertBefore(wrapper, grid.firstChild);
 
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
