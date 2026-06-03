@@ -344,38 +344,38 @@ export default function TickerCard({ ticker, data }: TickerCardProps) {
 
     // 2. DECAY CONDITION MATRIX
     const isComingOffStrength = macroReturn200D > 0.20;
-const isSignificantDrawdown = peakDrawdown > 0.25;
+    const isSignificantDrawdown = peakDrawdown > 0.25;
 
-if (isDecaying) {
-  if (inPriceDiscovery && discoveryType === 'DOWNWARD' && zScore > -1.0) return "Post Liquidation Phase";
+    if (isDecaying) {
+      if (inPriceDiscovery && discoveryType === 'DOWNWARD' && zScore > -1.0) return "Post Liquidation Phase";
 
-  if (isComingOffStrength && !isInstitutionallyLiquid) {
-    return "Post-Hype Liquidation Trap (Value Decay)";
-  }
+      if (isComingOffStrength && !isInstitutionallyLiquid) {
+        return "Post-Hype Liquidation Trap (Value Decay)";
+      }
 
-  if (isComingOffStrength && isInstitutionallyLiquid) {
-    return isAbove200SMA ? "High-Volume Macro Floor Consolidation" : "Deep Cycle Discount";
-  }
+      if (isComingOffStrength && isInstitutionallyLiquid) {
+        return isAbove200SMA ? "High-Volume Macro Floor Consolidation" : "Deep Cycle Discount";
+      }
 
-  // Check for active recovery BEFORE evaluating historical drawdown
-  const isRecoveringFromDecay = 
-    zScore > 0.8 &&
-    sma200Slope > 0.00 &&
-    relativeVolumeRatio > 1.2 &&
-    !inPriceDiscovery;
+      // Check for active recovery BEFORE evaluating historical drawdown
+      const isRecoveringFromDecay =
+        zScore > 0.8 &&
+        sma200Slope > 0.00 &&
+        relativeVolumeRatio > 1.2 &&
+        !inPriceDiscovery;
 
-  if (isRecoveringFromDecay) {
-    return isAbove200SMA
-      ? "Trend Recovery (Regaining Strength)"
-      : "Upward Price Discovery (Bear Market Breakout)";
-  }
+      if (isRecoveringFromDecay) {
+        return isAbove200SMA
+          ? "Trend Recovery (Regaining Strength)"
+          : "Upward Price Discovery (Bear Market Breakout)";
+      }
 
-  if (isSignificantDrawdown && isInstitutionallyLiquid) {
-    return isAbove200SMA ? "High-Volume Macro Floor Consolidation" : "Structural Decay (Extended Downtrend)";
-  }
+      if (isSignificantDrawdown && isInstitutionallyLiquid) {
+        return isAbove200SMA ? "High-Volume Macro Floor Consolidation" : "Structural Decay (Extended Downtrend)";
+      }
 
-  return isAbove200SMA ? "Weakening Trend (Loss of Momentum)" : "Structural Grind Down";
-}
+      return isAbove200SMA ? "Weakening Trend (Loss of Momentum)" : "Structural Grind Down";
+    }
 
     // 3. STANDARD REGIME MATRIX
     if (inPriceDiscovery && discoveryType === 'DOWNWARD') return "Downward Price Discovery (Liquidation Flush)";
@@ -410,22 +410,22 @@ if (isDecaying) {
     }
     const isGradualRecovery = macroReturn200D > 0.05 && sma200Slope > 0.00 && !isDecaying;
 
-if (isGradualRecovery) {
-  return "Baseline Recovery (Testing SMA)";
-}
+    if (isGradualRecovery) {
+      return "Baseline Recovery (Testing SMA)";
+    }
 
     // Sharp drop, high volume below SMA = genuine selling pressure
     if (zScore < -1.8) return "Falling Knife (Slow Decay)";
 
     // Positive momentum with institutional backing below SMA = potential real recovery
     if (zScore > 0.8 && isInstitutionallyLiquid && relativeVolumeRatio > 1.2 && sma200Slope > 0.02) {
-  return "Upward Price Discovery (Bear Market Breakout)";
-}
+      return "Upward Price Discovery (Bear Market Breakout)";
+    }
 
     // Mild positive momentum but low volume below SMA = likely a fake bounce
     if (zScore > 0.5 && zScore < 1.0 && relativeVolumeRatio < 0.8) {
       return "Bear Market Trap (Dead Cat Bounce)";
-    }    
+    }
 
     return "Structural Grind Down";
 
@@ -551,7 +551,7 @@ if (isGradualRecovery) {
       <div className={cardClassString} onClick={() => setShowModal(true)}>
         <h2 className="text-xl font-bold tracking-tight text-gray-900 mb-1 ">{ticker}</h2>
         <p className="text-sm text-gray-600  font-semibold mb-1">
-          
+
           Status: <span className={inPriceDiscovery ? "text-amber-700 font-bold" : "text-gray-900"}>{status}</span>
         </p>
         <p className="text-sm font-medium text-gray-700 ">Current price: <span className="font-semibold">${latestPrice.toFixed(2)}</span></p>
