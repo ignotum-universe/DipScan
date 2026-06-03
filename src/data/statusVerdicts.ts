@@ -339,4 +339,10 @@ export const STATUS_MATRIX: Record<string, StatusConfig> = {
     tip: "Large investors cannot buy everything they want at once without pushing the price up, so they spread their buying across many transactions over time. A significant dip with heavy volume is often the visible footprint of that process happening in real time.",
     variant: 'success'
   },
+  "Weakening Trend (Loss of Momentum)": {
+    analysis: "The asset is still above its long-term trend line, but the underlying strength that was driving it is fading. It has not broken down yet, but the buying pressure that was pushing it higher has noticeably dried up. This is the early stage of a trend losing conviction before it becomes more obvious to everyone else.",
+    recommendation: "Hold off on adding more at this stage. The long-term trend is still technically intact but the asset is showing early signs of rolling over. If you are already holding, there is no need to panic, but this is not a good time to increase your position. Watch for the trend to either stabilise and resume or continue weakening before making a decision.",
+    tip: "A trend does not usually reverse overnight. This weakening phase can last weeks before it either recovers or breaks down further. The key thing to watch is whether the price starts making lower highs on each recovery attempt. If each bounce reaches a lower peak than the last, the trend is losing steam and the breakdown risk is increasing.",
+    variant: 'warning'
+  },
 };

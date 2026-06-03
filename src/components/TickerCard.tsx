@@ -361,7 +361,7 @@ export default function TickerCard({ ticker, data }: TickerCardProps) {
         return isAbove200SMA ? "High-Volume Macro Floor Consolidation" : "Structural Decay (Extended Downtrend)";
       }
 
-      return isAbove200SMA ? "Extended Momentum (Approaching Ceiling)" : "Structural Grind Down";
+      return isAbove200SMA ? "Weakening Trend (Loss of Momentum)" : "Structural Grind Down";
     }
 
     // 3. STANDARD REGIME MATRIX
