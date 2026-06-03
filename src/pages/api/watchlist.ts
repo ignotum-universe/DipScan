@@ -129,7 +129,7 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
   if (watchlist.length >= MAX_TICKERS) {
     return new Response(JSON.stringify({ ok: false, error: 'Limit reached.' }), { status: 400 });
   }
-      watchlist.push(ticker);
+      watchlist.unshift(ticker);
     } else if (action === 'DELETE') {
       watchlist = watchlist.filter(s => s !== ticker);
     }

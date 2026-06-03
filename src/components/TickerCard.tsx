@@ -360,13 +360,14 @@ export default function TickerCard({ ticker, data }: TickerCardProps) {
       if (isSignificantDrawdown && isInstitutionallyLiquid) {
         return isAbove200SMA ? "High-Volume Macro Floor Consolidation" : "Structural Decay (Extended Downtrend)";
       }
+
+      return isAbove200SMA ? "Extended Momentum (Approaching Ceiling)" : "Structural Grind Down";
     }
 
     // 3. STANDARD REGIME MATRIX
     if (inPriceDiscovery && discoveryType === 'DOWNWARD') return "Downward Price Discovery (Liquidation Flush)";
     if (isAbove200SMA) {
       if (zScore > 1.2) return "Extended Momentum (Approaching Ceiling)";
-      if (zScore < -1.2) return "Low Activity Dip";
     }
 
     const isVolumeDropoff = relativeVolumeRatio < 0.5;
@@ -390,11 +391,15 @@ export default function TickerCard({ ticker, data }: TickerCardProps) {
 
     //Check for low volume reversal = dead cat bounce
     if (isAbove200SMA) {
+      if (zScore < -1.2) return "Low Activity Dip";
       inPriceDiscovery = false;
       return "Standard Bull Market Baseline (Healthy Consolidation)";
     }
-    const isVeryNearSMA = Math.abs(latestPrice - latest.sma200) / latest.sma200 < 0.02;
-    if (isVeryNearSMA) return "Baseline Recovery (Testing SMA)";
+    const isGradualRecovery = macroReturn200D > 0.05 && sma200Slope > 0.00 && !isDecaying;
+
+if (isGradualRecovery) {
+  return "Baseline Recovery (Testing SMA)";
+}
 
     // Sharp drop, high volume below SMA = genuine selling pressure
     if (zScore < -1.8) return "Falling Knife (Slow Decay)";
@@ -533,6 +538,7 @@ export default function TickerCard({ ticker, data }: TickerCardProps) {
       <div className={cardClassString} onClick={() => setShowModal(true)}>
         <h2 className="text-xl font-bold tracking-tight text-gray-900 mb-1 ">{ticker}</h2>
         <p className="text-sm text-gray-600  font-semibold mb-1">
+          
           Status: <span className={inPriceDiscovery ? "text-amber-700 font-bold" : "text-gray-900"}>{status}</span>
         </p>
         <p className="text-sm font-medium text-gray-700 ">Current price: <span className="font-semibold">${latestPrice.toFixed(2)}</span></p>

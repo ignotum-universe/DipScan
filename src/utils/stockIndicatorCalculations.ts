@@ -434,7 +434,7 @@ export async function getBatchEnrichedStockData(tickers: string[], token: string
 
   const { data: metaRows } = await supabase
     .from('stock_metadata')
-    .select('ticker, history_fetched_at, live_unsupported')
+    .select('ticker, history_fetched_at, live_unsupported, calculated_metrics') 
     .in('ticker', upperTickers);
 
   const unsupportedTickers = new Set(
@@ -443,14 +443,23 @@ export async function getBatchEnrichedStockData(tickers: string[], token: string
 
   const liveEligibleTickers = upperTickers.filter(t => !unsupportedTickers.has(t));
 
-  // 3. DETECT UNINITIALIZED TICKERS OR STALE HISTORICAL GAPS
+  // 3. DETECT UNINITIALIZED TICKERS, STALE GAPS, OR MISSING CACHE BLOCKS
+  const metaMap = new Map(metaRows?.map(m => [m.ticker.toUpperCase(), m]));
+
   const needsHistory = historyDateResults
     .filter(r => {
-      // Case A: Ticker has no history at all
+      const upperT = r.ticker.toUpperCase();
+      const metaRecord = metaMap.get(upperT);
+
+      // Case A: Ticker has no raw history rows at all
       if (!r.latestTradingDate) return true;
 
-      // Case B: Ticker exists but hasn't been updated since previous trading days
+      // Case B: Ticker raw data hasn't been updated since previous trading days
       if (r.latestTradingDate < lastExpectedClosedTradingDay) return true;
+
+      // Case C: The raw rows are here, but the metrics column is broken/null!
+      // This catches existing stocks that need their analytics compiled.
+      if (!metaRecord || metaRecord.calculated_metrics === null) return true;
 
       return false;
     })
