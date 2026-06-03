@@ -344,25 +344,38 @@ export default function TickerCard({ ticker, data }: TickerCardProps) {
 
     // 2. DECAY CONDITION MATRIX
     const isComingOffStrength = macroReturn200D > 0.20;
-    const isSignificantDrawdown = peakDrawdown > 0.25;
+const isSignificantDrawdown = peakDrawdown > 0.25;
 
-    if (isDecaying) {
-      if (inPriceDiscovery && discoveryType === 'DOWNWARD' && zScore > -1.0) return "Post Liquidation Phase";
+if (isDecaying) {
+  if (inPriceDiscovery && discoveryType === 'DOWNWARD' && zScore > -1.0) return "Post Liquidation Phase";
 
-      if (isComingOffStrength && !isInstitutionallyLiquid) {
-        return "Post-Hype Liquidation Trap (Value Decay)";
-      }
+  if (isComingOffStrength && !isInstitutionallyLiquid) {
+    return "Post-Hype Liquidation Trap (Value Decay)";
+  }
 
-      if (isComingOffStrength && isInstitutionallyLiquid) {
-        return isAbove200SMA ? "High-Volume Macro Floor Consolidation" : "Deep Cycle Discount";
-      }
+  if (isComingOffStrength && isInstitutionallyLiquid) {
+    return isAbove200SMA ? "High-Volume Macro Floor Consolidation" : "Deep Cycle Discount";
+  }
 
-      if (isSignificantDrawdown && isInstitutionallyLiquid) {
-        return isAbove200SMA ? "High-Volume Macro Floor Consolidation" : "Structural Decay (Extended Downtrend)";
-      }
+  // Check for active recovery BEFORE evaluating historical drawdown
+  const isRecoveringFromDecay = 
+    zScore > 0.8 &&
+    sma200Slope > 0.00 &&
+    relativeVolumeRatio > 1.2 &&
+    !inPriceDiscovery;
 
-      return isAbove200SMA ? "Weakening Trend (Loss of Momentum)" : "Structural Grind Down";
-    }
+  if (isRecoveringFromDecay) {
+    return isAbove200SMA
+      ? "Trend Recovery (Regaining Strength)"
+      : "Upward Price Discovery (Bear Market Breakout)";
+  }
+
+  if (isSignificantDrawdown && isInstitutionallyLiquid) {
+    return isAbove200SMA ? "High-Volume Macro Floor Consolidation" : "Structural Decay (Extended Downtrend)";
+  }
+
+  return isAbove200SMA ? "Weakening Trend (Loss of Momentum)" : "Structural Grind Down";
+}
 
     // 3. STANDARD REGIME MATRIX
     if (inPriceDiscovery && discoveryType === 'DOWNWARD') return "Downward Price Discovery (Liquidation Flush)";
@@ -405,14 +418,14 @@ if (isGradualRecovery) {
     if (zScore < -1.8) return "Falling Knife (Slow Decay)";
 
     // Positive momentum with institutional backing below SMA = potential real recovery
-    if (zScore > 1.0 && isInstitutionallyLiquid && relativeVolumeRatio > 1.5) {
-      return "Upward Price Discovery (Bear Market Breakout)";
-    }
+    if (zScore > 0.8 && isInstitutionallyLiquid && relativeVolumeRatio > 1.2 && sma200Slope > 0.02) {
+  return "Upward Price Discovery (Bear Market Breakout)";
+}
 
     // Mild positive momentum but low volume below SMA = likely a fake bounce
     if (zScore > 0.5 && zScore < 1.0 && relativeVolumeRatio < 0.8) {
       return "Bear Market Trap (Dead Cat Bounce)";
-    }
+    }    
 
     return "Structural Grind Down";
 
@@ -497,7 +510,7 @@ if (isGradualRecovery) {
 
         // Fallback Option B: Volatility/ATR pullback (e.g., buy a 3% dip)
         suggestedBuyLimit = parseFloat((latestPrice * 0.97).toFixed(2));
-        strategyMessage = `Price has ran up too high against historical prices to reliably predict an entry (${(distanceToNodePct * 100).toFixed(1)}% above highest historical node). Set entry at a standard 3% pullback.`;
+        strategyMessage = `Price has moved far above its last major support level (${(distanceToNodePct * 100).toFixed(1)}% above) to use it as a reliable entry point. Recommend entry at a standard 3% pullback instead.`;
 
       }
       // SENSITIVITY CHECK 2: Are we above or below this heavy accumulation shelf?

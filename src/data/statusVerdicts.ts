@@ -102,7 +102,8 @@ export const getCardStyles = (discoveryType: string | null, status: string): str
     status.includes("Extended Rally") ||
     status.includes("Retail Hype Pump") ||
     status.includes("Flash Crash") ||
-    status.includes("Unusual Volume")
+    status.includes("Unusual Volume") ||
+    status.includes("Weakening Trend (Loss of Momentum)")
   ) {
     return `${baseClasses} border-amber-300 hover:border-amber-400 bg-amber-50/20`;
   }

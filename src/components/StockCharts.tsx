@@ -117,9 +117,9 @@ export default function StockCharts({ ticker, data }: StockChartsProps) {
             intersect: true,
             fixed: {
               enabled: true,         // ← Locks the tooltip in a fixed position
-              position: 'topRight',  // ← Positions it out of the way in the top corner
+              position: 'top',  // ← Positions it out of the way in the top corner
               offsetX: -10,
-              offsetY: -40,          // ← Adjust this so it sits cleanly near or above the legend
+              offsetY: -10,          // ← Adjust this so it sits cleanly near or above the legend
             },
           },
           xaxis: {
