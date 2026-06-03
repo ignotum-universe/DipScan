@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css'
+import Analytics from '@vercel/analytics/astro'
 --- 
 
 <!doctype html>
@@ -7,12 +8,13 @@ import '../styles/global.css'
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/png" href="../assets/logo.png" />
+		<link rel="icon" type="image/png" href="/logo.png" />
 		<meta name="generator" content={Astro.generator} />
 		<title>Arbiter | A Market Context Interpreter</title>
 	</head>
 	<body class="">
 		<slot />
+		<Analytics/>
 	</body>
 </html>
 
