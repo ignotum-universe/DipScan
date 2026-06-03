@@ -79,6 +79,13 @@ export const variantTextClasses = {
 export const getCardStyles = (discoveryType: string | null, status: string): string => {
   const baseClasses = "p-5 h-full flex-1 rounded-xl border transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md bg-white text-gray-900";
 
+    //SPECIAL OVERRIDE FOR SAME NAMES
+  if(
+    status.includes("Fundamental Repricing (Stabilising)")
+  ) {
+    return `${baseClasses} border-amber-300 hover:border-amber-400 bg-amber-50/20`;
+  }
+
   // DANGER — red
   if (
     status.includes("Falling Knife") ||
@@ -86,7 +93,8 @@ export const getCardStyles = (discoveryType: string | null, status: string): str
     status.includes("Extreme Short-Term Overextension") ||
     status.includes("Failed Breakout Reversal") ||
     status.includes("Post Liquidation Phase") ||
-    status.includes("Structural Decay")
+    status.includes("Structural Decay") ||
+    status.includes("Fundamental Repricing")
   ) {
     return `${baseClasses} border-red-300 hover:border-red-400 bg-red-50/20`;
   }
@@ -110,10 +118,10 @@ export const getCardStyles = (discoveryType: string | null, status: string): str
 
   // SUCCESS — green
   if (
-    status.includes("Standard Bull Market Baseline") ||
+    status.includes("Healthy Consolidation") ||
     status.includes("Low Activity Dip") ||
     status.includes("Institutional Dip Absorption") ||
-    status.includes("Healthy Trend Consolidation") ||
+    // status.includes("Healthy Trend Consolidation") ||
     status.includes("High-Volume Macro Floor Consolidation") ||
     status.includes("Upward Price Discovery (Breakout)") ||
     status.includes("Extended Consolidation (Volatility Compression)") ||
@@ -167,7 +175,7 @@ export const STATUS_MATRIX: Record<string, StatusConfig> = {
     recommendation: "Wait before adding more. Let the price settle before buying. If you are already in profit, you may want to sell some now and look to buy back if the price drops.",
     variant: 'danger'
   },
-  "Standard Bull Market Baseline (Healthy Consolidation)": {
+  "Healthy Consolidation": {
     analysis: "The price is consolidating after a recent rise, which is completely normal. It is still well above its long-term trend line with no signs of panic or heavy selling. The market is simply taking a breather before the next move.",
     recommendation: "This is a reasonable time to buy. The long-term trend is still up and the price is in a healthy resting phase. You do not need to wait for a dip to justify adding here.",
     tip: "Sideways movement in an uptrend is the market consolidating gains before continuing. Most long-term investors who buy during these consolidation phases end up with better average prices than those waiting for a dramatic dip that may never come.",
@@ -175,7 +183,7 @@ export const STATUS_MATRIX: Record<string, StatusConfig> = {
   },
   "Low Activity Dip": {
     analysis: "The price has quietly drifted down to a notably low level relative to where it normally trades, but without any spike in selling activity or panic behind it. The long-term trend is still pointing up and there is no sign of a major event driving the drop. The price has simply slipped down gradually with normal day to day trading.",
-    recommendation: "This is a reasonable time to buy. The trend is intact, the price is at a discount, and the lack of panic means you are not buying into volatility. You are getting a calmer entry point than usual inside an ongoing uptrend.",
+    recommendation: "This is a premium buying opportunity. The trend is intact, the price is at a discount, the asset is oversold, and the lack of panic means you are not buying into volatility. You are getting a calmer entry point than usual inside an ongoing uptrend.",
     tip: "Dips without panic are often cleaner buying opportunities than sharp drops because the price tends to be more stable. There is no crowd of late panic sellers still waiting to exit above you, which means less resistance on the way back up.",
     variant: 'success'
   },
@@ -223,6 +231,25 @@ export const STATUS_MATRIX: Record<string, StatusConfig> = {
     caution: "If the news points to a real and lasting problem with the company rather than a temporary shock, treat this as the start of a larger move down rather than a buying opportunity. The news check will be the entire basis for a decision.",
     variant: 'warning'
   },
+  "Fundamental Repricing": {
+  analysis: "The price has dropped significantly in a single session. Moves of this size usually mean the market has received new information and is adjusting what it believes the asset is worth. This could be a dilution event, a damaging earnings, a loss of a major contract, or any development that changes the underlying economics of the company.",
+  recommendation: "Do not approach this as a buying opportunity until you understand the cause. If the cause is structural, the new price may now be the correct price. If the sell off turns out to be an overreaction to something temporary, a recovery is possible but will be slower and less certain.",
+  caution: "Moves of this size rarely fully reverse without a catalyst. If the price continues to make lower lows through the session the move is not finished. Buying before the cause is confirmed is the most common way traders get caught in a prolonged downtrend.",
+  variant: 'danger'
+},
+"Fundamental Repricing (Continued Selloff)": {
+  analysis: "This asset experienced a significant single-session drop recently and is continuing to sell off. The market has not found a level it is comfortable with yet. This suggests the initial drop was not an overreaction as sellers are still actively reducing their position at the new lower price.",
+  recommendation: "Do not try to guess where it stops falling. The fact that selling has continued after the initial drop means the cause was likely structural and the market is still adjusting its view of what this asset is worth.",
+  caution: "Each day that closes lower after the initial repricing increases the probability that this becomes a prolonged downtrend rather than a sharp reset.",
+  variant: 'danger'
+},
+
+"Fundamental Repricing (Stabilising)": {
+  analysis: "This asset dropped significantly in a recent session and is now trading sideways near that new lower level. The initial selling pressure has exhausted itself for now. This is the market pausing to assess whether the new price reflects the damage accurately or if it was an overreaction.",
+  recommendation: "Wait and see. The bleeding has stopped but it's not yet meaningful on its own. It may take a few days for the market to determine the asset's new worth.",
+  caution: "Sideways movement after a sharp drop can look like stability while larger holders are selling into any attempted price recovery. Do not confuse a pause in selling with a recovery.",
+  variant: 'warning'
+},
   "Extended Consolidation (Volatility Compression)": {
     analysis: "The price has been moving sideways in a very tight range with low activity while sitting close to its long-term average. Large investors tend to quietly build their positions during these low-activity phases before the next move.",
     recommendation: "If you believe in this asset long term, this is a good time to buy steadily. The price is calm and predictable right now, which means you are not chasing a spike or buying into panic. These calm phases often precede larger moves.",

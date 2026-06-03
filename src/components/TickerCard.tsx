@@ -199,6 +199,15 @@ export default function TickerCard({ ticker, data }: TickerCardProps) {
     // is clear and there is no shadowing.
     const isNearSMA = Math.abs(latestPrice - latest.sma200) / latest.sma200 < 0.04;
 
+    const recentRepricingIndex = [1, 2, 3].find(i => {
+  const prev = chartData[i + 1]?.close_price;
+  const curr = chartData[i]?.close_price;
+  if (!prev || !curr) return false;
+  return (curr - prev) / prev < -0.15;
+});
+
+const isPostFundamentalRepricing = recentRepricingIndex !== undefined;
+
     // ==========================================
     // CRITICAL EDGE GUARDS (reordered per audit)
     // ==========================================
@@ -208,16 +217,18 @@ export default function TickerCard({ ticker, data }: TickerCardProps) {
       return "Illiquid Zombie Asset";
     }
 
-    // GUARD 2: Panic / flash crash
-    // NOTE: isPanic intentionally uses `currentZScore` (the VWAP z-score computed
-    // at the outer scope from the rolling VWAP series), NOT the `zScore` argument
-    // (which is the caller-supplied momentum z-score). This is deliberate: panic
-    // detection wants the VWAP-anchored signal because it captures intraday
-    // dislocation more sensitively. All other guards use the caller's `zScore`.
+    // GUARD 2: Flash/Velocity Crash (The "Tanking" detector)
+    const oneDayChange = (latestPrice - previousPrice) / previousPrice;
     const isPanic = currentZScore < -1.8 && relativeVolumeRatio > 1.5;
-    if (isPanic) {
-      return isDecaying ? "Falling Knife (It's so over)" : "Flash Crash";
-    }
+    if (oneDayChange < -0.15) {
+  if (isPanic) return isDecaying ? "Falling Knife (It's so over)" : "Flash Crash";
+  return "Fundamental Repricing";
+}
+
+if (isPostFundamentalRepricing && isAbove200SMA) {
+  if (oneDayChange < -0.02) return "Fundamental Repricing (Continued Selloff)";
+  if (Math.abs(oneDayChange) <= 0.02) return "Fundamental Repricing (Stabilising)";
+}
 
     // GUARD 3: Intraday pump & dump vs legitimate catalyst
     const openPrice = latest.open_price || latestPrice;
@@ -406,7 +417,7 @@ export default function TickerCard({ ticker, data }: TickerCardProps) {
     if (isAbove200SMA) {
       if (zScore < -1.2) return "Low Activity Dip";
       inPriceDiscovery = false;
-      return "Standard Bull Market Baseline (Healthy Consolidation)";
+      return "Healthy Consolidation";
     }
     const isGradualRecovery = macroReturn200D > 0.05 && sma200Slope > 0.00 && !isDecaying;
 
