@@ -128,7 +128,8 @@ export const getCardStyles = (discoveryType: string | null, status: string): str
     status.includes("Institutional Support Zone") ||
     status.includes("Upward Price Discovery (Breakout)") ||
     status.includes("Extended Consolidation (Volatility Compression)") ||
-    status.includes("Post-Momentum Consolidation")
+    status.includes("Post-Momentum Consolidation") ||
+    status.includes("Trend Recovery (Regaining Strength)")
   ) {
     return `${baseClasses} border-emerald-300 hover:border-emerald-400 bg-emerald-50/20`;
   }

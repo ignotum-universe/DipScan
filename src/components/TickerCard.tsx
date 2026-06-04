@@ -200,13 +200,13 @@ export default function TickerCard({ ticker, data }: TickerCardProps) {
     const isNearSMA = Math.abs(latestPrice - latest.sma200) / latest.sma200 < 0.04;
 
     const recentRepricingIndex = [1, 2, 3].find(i => {
-  const prev = chartData[i + 1]?.close_price;
-  const curr = chartData[i]?.close_price;
-  if (!prev || !curr) return false;
-  return (curr - prev) / prev < -0.15;
-});
+      const prev = chartData[i + 1]?.close_price;
+      const curr = chartData[i]?.close_price;
+      if (!prev || !curr) return false;
+      return (curr - prev) / prev < -0.15;
+    });
 
-const isPostFundamentalRepricing = recentRepricingIndex !== undefined;
+    const isPostFundamentalRepricing = recentRepricingIndex !== undefined;
 
     // ==========================================
     // CRITICAL EDGE GUARDS (reordered per audit)
@@ -221,14 +221,14 @@ const isPostFundamentalRepricing = recentRepricingIndex !== undefined;
     const oneDayChange = (latestPrice - previousPrice) / previousPrice;
     const isPanic = currentZScore < -1.8 && relativeVolumeRatio > 1.5;
     if (oneDayChange < -0.15) {
-  if (isPanic) return isDecaying ? "Falling Knife (It's so over)" : "Flash Crash";
-  return "Fundamental Repricing";
-}
+      if (isPanic) return isDecaying ? "Falling Knife (It's so over)" : "Flash Crash";
+      return "Fundamental Repricing";
+    }
 
-if (isPostFundamentalRepricing && isAbove200SMA) {
-  if (oneDayChange < -0.02) return "Fundamental Repricing (Continued Selloff)";
-  if (Math.abs(oneDayChange) <= 0.02) return "Fundamental Repricing (Stabilising)";
-}
+    if (isPostFundamentalRepricing && isAbove200SMA) {
+      if (oneDayChange < -0.02) return "Fundamental Repricing (Continued Selloff)";
+      if (Math.abs(oneDayChange) <= 0.02) return "Fundamental Repricing (Stabilising)";
+    }
 
     // GUARD 3: Intraday pump & dump vs legitimate catalyst
     const openPrice = latest.open_price || latestPrice;
@@ -292,49 +292,49 @@ if (isPostFundamentalRepricing && isAbove200SMA) {
     }
 
     // Short-term whipsaw — volatile sessions (your original)
-const shortWindow = chartData.slice(0, 7);
-let shortDirectionChanges = 0;
-let lastDir: 'up' | 'down' | null = null;
+    const shortWindow = chartData.slice(0, 7);
+    let shortDirectionChanges = 0;
+    let lastDir: 'up' | 'down' | null = null;
 
-for (let i = 0; i < shortWindow.length - 1; i++) {
-  const move = (shortWindow[i].close_price - shortWindow[i+1].close_price) / shortWindow[i+1].close_price;
-  if (Math.abs(move) < 0.02) continue;
-  const dir = move > 0 ? 'up' : 'down';
-  if (lastDir !== null && dir !== lastDir) shortDirectionChanges++;
-  lastDir = dir;
-}
+    for (let i = 0; i < shortWindow.length - 1; i++) {
+      const move = (shortWindow[i].close_price - shortWindow[i + 1].close_price) / shortWindow[i + 1].close_price;
+      if (Math.abs(move) < 0.025) continue;
+      const dir = move > 0 ? 'up' : 'down';
+      if (lastDir !== null && dir !== lastDir) shortDirectionChanges++;
+      lastDir = dir;
+    }
 
-// Macro-range whipsaw — sample every ~10 days over 200 days
-const macroSamples = Array.from({ length: 20 }, (_, i) => 
-  chartData[i * 10]?.close_price
-).filter(Boolean);
+    // Macro-range whipsaw — sample every ~10 days over 200 days
+    const macroSamples = Array.from({ length: 20 }, (_, i) =>
+      chartData[i * 10]?.close_price
+    ).filter(Boolean);
 
-let macroDirectionChanges = 0;
-let macroLastDir: 'up' | 'down' | null = null;
+    let macroDirectionChanges = 0;
+    let macroLastDir: 'up' | 'down' | null = null;
 
-for (let i = 0; i < macroSamples.length - 1; i++) {
-  const move = (macroSamples[i] - macroSamples[i+1]) / macroSamples[i+1];
-  if (Math.abs(move) < 0.03) continue; // slightly higher threshold for macro
-  const dir = move > 0 ? 'up' : 'down';
-  if (macroLastDir !== null && dir !== macroLastDir) macroDirectionChanges++;
-  macroLastDir = dir;
-}
+    for (let i = 0; i < macroSamples.length - 1; i++) {
+      const move = (macroSamples[i] - macroSamples[i + 1]) / macroSamples[i + 1];
+      if (Math.abs(move) < 0.03) continue; // slightly higher threshold for macro
+      const dir = move > 0 ? 'up' : 'down';
+      if (macroLastDir !== null && dir !== macroLastDir) macroDirectionChanges++;
+      macroLastDir = dir;
+    }
 
-const isShortWhipsaw = shortDirectionChanges >= 2;
-const isMacroWhipsaw = macroDirectionChanges >= 6; // lots of reversals over 200 days
+    const isShortWhipsaw = shortDirectionChanges >= 3;
+    const isMacroWhipsaw = macroDirectionChanges >= 6; // lots of reversals over 200 days
 
-const isMacroUptrend  = isAbove200SMA && sma200Slope > 0.01;
-const isMacroRanging  = Math.abs(sma200Slope) <= 0.01;
+    const isMacroUptrend = isAbove200SMA && sma200Slope > 0.01;
+    const isMacroRanging = Math.abs(sma200Slope) <= 0.01;
 
-if (isMacroWhipsaw && isMacroRanging) {
-  return "Range-Bound (Stuck in a Range)";
-}
+    if (isMacroWhipsaw && isMacroRanging) {
+      return "Range-Bound (Stuck in a Range)";
+    }
 
-if (isShortWhipsaw) {
-  return isMacroUptrend 
-    ? "Choppy Consolidation"
-    : "Whipsaw (No Structural Support)";
-}
+    if (isShortWhipsaw) {
+      return isMacroUptrend
+        ? "Choppy Consolidation"
+        : "Whipsaw (No Structural Support)";
+    }
 
     // GUARD 5: Volume anomaly — moved after the failed-breakout check so a
     // zScore < 0.5 / high-volume scenario is first evaluated as a potential
@@ -369,7 +369,7 @@ if (isShortWhipsaw) {
     if (volatilityGuard?.isCompressed && isNearSMA && !isFallingHard) {
       return "Volatility Compression (Coiled Spring)";
     }
-    
+
 
     // ==========================================
     // MAIN REGIME CORE LOGIC
@@ -421,10 +421,10 @@ if (isShortWhipsaw) {
         relativeVolumeRatio > 1.2 &&
         !inPriceDiscovery;
 
-        
+
 
       if (isRecoveringFromDecay) {
-        
+
         return isAbove200SMA
           ? "Trend Recovery (Regaining Strength)"
           : "Upward Price Discovery (Bear Market Breakout)";
