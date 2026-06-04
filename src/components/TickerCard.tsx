@@ -291,6 +291,51 @@ if (isPostFundamentalRepricing && isAbove200SMA) {
       return "Failed Breakout Reversal (Bull Trap)";
     }
 
+    // Short-term whipsaw — volatile sessions (your original)
+const shortWindow = chartData.slice(0, 7);
+let shortDirectionChanges = 0;
+let lastDir: 'up' | 'down' | null = null;
+
+for (let i = 0; i < shortWindow.length - 1; i++) {
+  const move = (shortWindow[i].close_price - shortWindow[i+1].close_price) / shortWindow[i+1].close_price;
+  if (Math.abs(move) < 0.02) continue;
+  const dir = move > 0 ? 'up' : 'down';
+  if (lastDir !== null && dir !== lastDir) shortDirectionChanges++;
+  lastDir = dir;
+}
+
+// Macro-range whipsaw — sample every ~10 days over 200 days
+const macroSamples = Array.from({ length: 20 }, (_, i) => 
+  chartData[i * 10]?.close_price
+).filter(Boolean);
+
+let macroDirectionChanges = 0;
+let macroLastDir: 'up' | 'down' | null = null;
+
+for (let i = 0; i < macroSamples.length - 1; i++) {
+  const move = (macroSamples[i] - macroSamples[i+1]) / macroSamples[i+1];
+  if (Math.abs(move) < 0.03) continue; // slightly higher threshold for macro
+  const dir = move > 0 ? 'up' : 'down';
+  if (macroLastDir !== null && dir !== macroLastDir) macroDirectionChanges++;
+  macroLastDir = dir;
+}
+
+const isShortWhipsaw = shortDirectionChanges >= 2;
+const isMacroWhipsaw = macroDirectionChanges >= 6; // lots of reversals over 200 days
+
+const isMacroUptrend  = isAbove200SMA && sma200Slope > 0.01;
+const isMacroRanging  = Math.abs(sma200Slope) <= 0.01;
+
+if (isMacroWhipsaw && isMacroRanging) {
+  return "Range-Bound (Stuck in a Range)";
+}
+
+if (isShortWhipsaw) {
+  return isMacroUptrend 
+    ? "Choppy Consolidation"
+    : "Whipsaw (No Structural Support)";
+}
+
     // GUARD 5: Volume anomaly — moved after the failed-breakout check so a
     // zScore < 0.5 / high-volume scenario is first evaluated as a potential
     // failed breakout before falling back to this generic label.
@@ -324,6 +369,7 @@ if (isPostFundamentalRepricing && isAbove200SMA) {
     if (volatilityGuard?.isCompressed && isNearSMA && !isFallingHard) {
       return "Volatility Compression (Coiled Spring)";
     }
+    
 
     // ==========================================
     // MAIN REGIME CORE LOGIC
@@ -365,7 +411,7 @@ if (isPostFundamentalRepricing && isAbove200SMA) {
       }
 
       if (isComingOffStrength && isInstitutionallyLiquid) {
-        return isAbove200SMA ? "High-Volume Macro Floor Consolidation" : "Deep Cycle Discount";
+        return isAbove200SMA ? "Institutional Support Zone" : "Deep Cycle Discount";
       }
 
       // Check for active recovery BEFORE evaluating historical drawdown
@@ -375,14 +421,17 @@ if (isPostFundamentalRepricing && isAbove200SMA) {
         relativeVolumeRatio > 1.2 &&
         !inPriceDiscovery;
 
+        
+
       if (isRecoveringFromDecay) {
+        
         return isAbove200SMA
           ? "Trend Recovery (Regaining Strength)"
           : "Upward Price Discovery (Bear Market Breakout)";
       }
 
       if (isSignificantDrawdown && isInstitutionallyLiquid) {
-        return isAbove200SMA ? "High-Volume Macro Floor Consolidation" : "Structural Decay (Extended Downtrend)";
+        return isAbove200SMA ? "Institutional Support Zone" : "Structural Decay (Extended Downtrend)";
       }
 
       return isAbove200SMA ? "Weakening Trend (Loss of Momentum)" : "Structural Grind Down";
@@ -601,7 +650,7 @@ if (isPostFundamentalRepricing && isAbove200SMA) {
               <div className="text-[10px] font-bold text-gray-400 uppercase">VPVR Order Levels</div>
               <div className="flex justify-between items-center text-xs text-gray-600">
                 <span>🎯 Most Traded Price:</span>
-                <span className="font-mono font-bold text-blue-600 bg-blue-50/50 px-1.5 py-0.5 rounded">${pocPrice.toFixed(2)}</span>
+                <span className="font-mono font-bold text-blue-600 bg-gray-100 px-1.5 py-0.5 rounded">${pocPrice.toFixed(2)}</span>
               </div>
 
               {suggestedBuyLimit && (

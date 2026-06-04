@@ -7,7 +7,7 @@ interface RateLimitEntry {
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
 const WINDOW_MS = 60_000; // 1 minute
-const MAX_REQUESTS = 20;  // per window
+const MAX_REQUESTS = 60;  // per window
 
 export function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
   const now = Date.now();

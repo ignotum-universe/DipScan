@@ -5,11 +5,22 @@ import {
   getBatchEnrichedStockData, 
   getCalculatedTickerData 
 } from '../../utils/stockIndicatorCalculations';
+import { checkRateLimit } from '../../lib/ratelimit';
 
-export const POST: APIRoute = async ({ request }) => {
-  try {
-    const { tickers, token } = await request.json();
-    const activeToken = token || import.meta.env.TIINGO_TOKEN;
+export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
+  const { allowed, retryAfter } = checkRateLimit(clientAddress);
+  if (!allowed) {
+    return new Response(
+      JSON.stringify({ error: 'Too many requests' }),
+      { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+    );
+  }
+    try {
+    const { tickers } = await request.json();
+    const activeToken = cookies.get('tiingo_token')?.value;
+    if (!activeToken) {
+     return new Response(JSON.stringify({ error: 'Token required' }), { status: 401 });
+}
 
     if (!tickers || !Array.isArray(tickers)) {
       return new Response(JSON.stringify({ error: 'Invalid tickers array' }), { status: 400 });

@@ -111,7 +111,10 @@ export const getCardStyles = (discoveryType: string | null, status: string): str
     status.includes("Retail Hype Pump") ||
     status.includes("Flash Crash") ||
     status.includes("Unusual Volume") ||
-    status.includes("Weakening Trend (Loss of Momentum)")
+    status.includes("Weakening Trend (Loss of Momentum)") ||
+    status.includes("Range-Bound") ||
+    status.includes("Choppy Consolidation") ||
+    status.includes("Whipsaw (No Structural Support)")
   ) {
     return `${baseClasses} border-amber-300 hover:border-amber-400 bg-amber-50/20`;
   }
@@ -122,7 +125,7 @@ export const getCardStyles = (discoveryType: string | null, status: string): str
     status.includes("Low Activity Dip") ||
     status.includes("Institutional Dip Absorption") ||
     // status.includes("Healthy Trend Consolidation") ||
-    status.includes("High-Volume Macro Floor Consolidation") ||
+    status.includes("Institutional Support Zone") ||
     status.includes("Upward Price Discovery (Breakout)") ||
     status.includes("Extended Consolidation (Volatility Compression)") ||
     status.includes("Post-Momentum Consolidation")
@@ -177,13 +180,13 @@ export const STATUS_MATRIX: Record<string, StatusConfig> = {
   },
   "Healthy Consolidation": {
     analysis: "The price is consolidating after a recent rise, which is completely normal. It is still well above its long-term trend line with no signs of panic or heavy selling. The market is simply taking a breather before the next move.",
-    recommendation: "This is a reasonable time to buy. The long-term trend is still up and the price is in a healthy resting phase. You do not need to wait for a dip to justify adding here.",
+    recommendation: "This is a reasonable time to buy. The long-term trend is still up and the price is in a healthy resting phase. You do not need to wait for a dramtic dip to justify adding here.",
     tip: "Sideways movement in an uptrend is the market consolidating gains before continuing. Most long-term investors who buy during these consolidation phases end up with better average prices than those waiting for a dramatic dip that may never come.",
     variant: 'success'
   },
   "Low Activity Dip": {
     analysis: "The price has quietly drifted down to a notably low level relative to where it normally trades, but without any spike in selling activity or panic behind it. The long-term trend is still pointing up and there is no sign of a major event driving the drop. The price has simply slipped down gradually with normal day to day trading.",
-    recommendation: "This is a premium buying opportunity. The trend is intact, the price is at a discount, the asset is oversold, and the lack of panic means you are not buying into volatility. You are getting a calmer entry point than usual inside an ongoing uptrend.",
+    recommendation: "This is a good buying opportunity. The trend is intact, the price is at a discount, the asset is oversold, and the lack of panic means you are not buying into volatility. You are getting a calmer entry point than usual inside an ongoing uptrend.",
     tip: "Dips without panic are often cleaner buying opportunities than sharp drops because the price tends to be more stable. There is no crowd of late panic sellers still waiting to exit above you, which means less resistance on the way back up.",
     variant: 'success'
   },
@@ -212,6 +215,12 @@ export const STATUS_MATRIX: Record<string, StatusConfig> = {
     analysis: "The price is pushing upward strongly with momentum behind it. The move is happening with conviction and there is less overhead resistance to slow it down from here.",
     recommendation: "There is no need to chase the move right as it happens. A small pullback after a strong push tends to be a safer place to buy rather than rushing in at the peak of the momentum.",
     tip: "The higher the price goes without a pause, the more likely a short-term cooldown becomes. Waiting for the price to settle and hold at a new level before adding is generally a more reliable entry than buying into the surge itself.",
+    variant: 'success'
+  },
+  "Trend Recovery (Regaining Strength)": {
+    analysis: "The asset has successfully broken back above its long-term average (200SMA) and is beginning to exhibit upward momentum. The fact that the average itself is starting to slope upward suggests the long-term trend is shifting from bearish to bullish.",
+    recommendation: "This is a constructive signal, but avoid emotional 'FOMO' buying. Because the stock has spent significant time below the 200SMA, it may face 're-test' phases where it bounces off that average as support. Look for the price to hold above the 200SMA on a temporary pullback as confirmation of the new trend.",
+    tip: "A true trend recovery isn't just a single day of green; it's a series of higher lows. Ensure the volume remains consistent to prove that institutional buyers are participating in this reversal.",
     variant: 'success'
   },
   "Extended Momentum (Approaching Ceiling)": {
@@ -273,7 +282,7 @@ export const STATUS_MATRIX: Record<string, StatusConfig> = {
     recommendation: "Hold off and watch for the next few sessions. Wait for the price to find a stable level before making a move.",
     variant: 'neutral'
   },
-  "High-Volume Macro Floor Consolidation": {
+  "Institutional Support Zone": {
     analysis: "The asset has been holding steady at a strong price floor above its long-term trend line, with consistently high buying volume backing it up. This suggests large investors are actively buying at this level and defending the price.",
     recommendation: "This is a good zone to buy steadily over time. The risk is relatively low here because large investors appear to be supporting the price, which reduces the chance of a sharp drop from this level.",
     tip: "Large funds cannot buy all their shares at once without pushing the price up, so they spread their buying out over weeks by quietly absorbing shares as they become available. High volume during a sideways phase is often the sign that this is happening.",
@@ -373,4 +382,24 @@ export const STATUS_MATRIX: Record<string, StatusConfig> = {
     tip: "A trend does not usually reverse overnight. This weakening phase can last weeks before it either recovers or breaks down further. The key thing to watch is whether the price starts making lower highs on each recovery attempt. If each bounce reaches a lower peak than the last, the trend is losing steam and the breakdown risk is increasing.",
     variant: 'warning'
   },
+  "Range-Bound (Stuck in a Range)": {
+  analysis: "This asset has been trading between the same price levels for an extended period with no meaningful progress in either direction. Over the long run, buyers and sellers are in a stalemate, nobody is willing to commit enough capital to push this into a real trend.",
+  recommendation: "Avoid buying this. This is dead money, every dollar sitting in this asset is a dollar not compounding somewhere with an actual trend behind it. There is no urgency to sell if you are already holding, but there is also no reason to add to it until the trend starts sloping upward again.",
+  tip: "An asset can stay stuck in a range for months or years. This stalemate may only be broken by a groundbreaking catalyst.",
+  variant: 'warning'
+},
+
+"Choppy Consolidation": {
+  analysis: "The price is making sharp moves up and down in quick succession within what is otherwise a healthy uptrend. The long-term structure is intact, but the short-term price action is too erratic right now.",
+  recommendation: "The trend being intact means dips within this back-and-forth movement are worth considering, it's impossible to time the market as it's too volatile right now, so if you do buy, do so knowing it might go lower",
+  tip: "Choppy price action in an uptrend is often caused by uncertainty around a news event or earnings. Once that uncertainty clears, the trend tends to reassert itself. Patience here is the price to pay for clarity.",
+  variant: 'warning'
+},
+
+"Whipsaw (No Structural Support)": {
+  analysis: "The price is making sharp moves in both directions but there is no underlying trend to fall back on. Each bounce has nothing supporting it and each drop has nothing stopping it.",
+  recommendation: "Do not buy this. Unlike back-and-forth movement in an uptrend where the macro structure is still intact, there is no reason here to expect the price to recover after a down move. The erratic action is more likely to exhaust itself downward.",
+  caution: "High volume during this kind of back-and-forth often means large players are actively selling shares to anyone willing to buy the bounces. Each fake recovery is an exit opportunity for those looking to get out.",
+  variant: 'danger'
+},
 };

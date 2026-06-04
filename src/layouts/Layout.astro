@@ -1,6 +1,8 @@
 ---
 import '../styles/global.css'
 import Analytics from '@vercel/analytics/astro'
+import AuthHandler from '../components/AuthHandler.jsx';
+
 --- 
 
 <!doctype html>
@@ -8,11 +10,12 @@ import Analytics from '@vercel/analytics/astro'
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/png" href="/logo.png" />
+		<link rel="icon" type="svg" href="/logo.png" />
 		<meta name="generator" content={Astro.generator} />
 		<title>Arbiter | A Market Context Interpreter</title>
 	</head>
 	<body class="">
+		<AuthHandler client:load />
 		<slot />
 		<Analytics/>
 	</body>
