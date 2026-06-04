@@ -17,18 +17,31 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
   }
     try {
     const { tickers } = await request.json();
-    const activeToken = cookies.get('tiingo_token')?.value;
-    if (!activeToken) {
-     return new Response(JSON.stringify({ error: 'Token required' }), { status: 401 });
-}
+    const DEFAULT_STOCKS = ["GDX", "GOOG", "VOO", "CHA"];
+    
+    // Check if user is logged in
+    const userToken = cookies.get('tiingo_token')?.value;
+    
+    // Check if the requested tickers are ONLY the default ones
+    const isOnlyDefault = tickers.every((t: string) => DEFAULT_STOCKS.includes(t.toUpperCase()));
+
+    // AUTH GATE:
+    // If no token AND they are trying to fetch non-default stocks -> 401
+    if (!userToken && !isOnlyDefault) {
+       return new Response(JSON.stringify({ error: 'Token required for custom tickers' }), { status: 401 });
+    }
+
+    // Determine which token to use
+    // Use user token if present, otherwise fallback to master token (only if safe)
+    const activeToken = userToken || import.meta.env.TIINGO_TOKEN;
 
     if (!tickers || !Array.isArray(tickers)) {
       return new Response(JSON.stringify({ error: 'Invalid tickers array' }), { status: 400 });
     }
 
-    const upperTickers = tickers.map(t => t.toUpperCase());
+    const upperTickers = tickers.map((t: string) => t.toUpperCase());
 
-    // 1. Run your history/gap orchestrator checks exactly ONCE for the whole batch
+    // Proceed with the rest of your logic...
     await getBatchEnrichedStockData(upperTickers, activeToken);
 
     // 2. ✅ BATCH THE CACHE PRE-CHECK: Fetch the latest updated_at for all requested tickers at once

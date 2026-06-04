@@ -188,6 +188,18 @@ const tickerDataMap: StructuralTickerItem[] = watchlist.map((symbol) => ({
     });
   }
 
+  async function checkAuthStatus() {
+  const token = localStorage.getItem('tiingo_token');
+  
+  if (!token) {
+    // If we are on the dashboard and have no token, 
+    // maybe we don't even try to fetch?
+    console.log("No token detected, showing guest view.");
+    return false;
+  }
+  return true;
+}
+
   async function hydrateSkeletons() {
     // 1. Find all active skeleton cards on the page
     const lazyCards = document.querySelectorAll<HTMLElement>('[data-lazy-ticker]');
@@ -208,7 +220,12 @@ const tickerDataMap: StructuralTickerItem[] = watchlist.map((symbol) => ({
         body: JSON.stringify({ tickers, token })
       });
 
-      if (!res.ok) throw new Error('Batch network calculation failed.');
+      if (res.status === 401) {
+  // Don't throw, just log and handle the UI
+  console.warn("Guest mode active: Custom tickers unauthorized.");
+  return; 
+}
+if (!res.ok) throw new Error('Batch network calculation failed.');
       
       // Destructure the unified results map
       const { results } = await res.json(); 

@@ -367,8 +367,8 @@ export const STATUS_MATRIX: Record<string, StatusConfig> = {
   },
   "Post-Momentum Consolidation": {
     analysis: "The price is settling after a sharp move up. This is a normal and healthy pause that tends to separate a real trend from a short-lived spike. The asset is absorbing recent gains before deciding its next move.",
-    recommendation: "This is a good time to buy or add to your position. Buying during the consolidation phase after a breakout is generally safer than buying into the initial surge. The trend is still intact and the price is giving you a calmer entry point.",
-    tip: "If trading activity drops off while the price holds steady, that is a positive sign. It means the selling pressure has dried up. If activity stays high while the price drifts lower, it is worth waiting a little longer to see if the trend holds.",
+    recommendation: "This is a good time to buy or add to your position. Buying during the consolidation phase after a breakout is generally safer than buying into the initial surge.",
+    caution: "Be cautious if the asset is still in a long-term downtrend. This 'consolidation' is could very well be a pause before the next leg down.",
     variant: 'success'
   },
   "Institutional Dip Absorption": {
