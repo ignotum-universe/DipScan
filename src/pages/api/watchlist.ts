@@ -110,7 +110,7 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
     }
 
     const cookieWatchlist = cookies.get('watchlist')?.json();
-    let watchlist: string[] = Array.isArray(cookieWatchlist) ? cookieWatchlist : ["GDX", "TSLA", "VOO", "XLP"]
+    let watchlist: string[] = Array.isArray(cookieWatchlist) ? cookieWatchlist : ["GDX", "GOOG", "VOO", "WMT"]
     watchlist = watchlist
     .map(t => typeof t === 'string' ? t.trim().toUpperCase() : '') // Ensure strings onl
     .filter(t => TICKER_REGEX.test(t));                           // Strip out illegal characters

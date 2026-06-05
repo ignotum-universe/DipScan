@@ -17,7 +17,7 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
   }
     try {
     const { tickers } = await request.json();
-    const DEFAULT_STOCKS = ["GDX", "GOOG", "VOO", "CHA"];
+    const DEFAULT_STOCKS = ["GDX", "GOOG", "VOO", "WMT"];
     
     // Check if user is logged in
     const userToken = cookies.get('tiingo_token')?.value;
