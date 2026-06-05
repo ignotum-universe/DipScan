@@ -10,7 +10,7 @@ import { isValidTicker } from '../utils/tickerValidator';
 const userToken = Astro.cookies.get('tiingo_token')?.value;
 let activeToken = userToken || import.meta.env.TIINGO_TOKEN;
 
-const DEFAULT_STOCKS = ["GDX", "TSLA", "VOO", "WMT"];
+const DEFAULT_STOCKS = ["VOO", "AAPL", "PFE", "GDX", "NBIS"];
 const cookieWatchlist = Astro.cookies.get('watchlist')?.json();
 let rawWatchlist: string[] = Array.isArray(cookieWatchlist) ? cookieWatchlist : DEFAULT_STOCKS;
 
