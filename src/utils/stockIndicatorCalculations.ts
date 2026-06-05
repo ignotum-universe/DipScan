@@ -675,6 +675,17 @@ export function computeMetricsFromRows(dbData: any[]) {
     };
   }
 
+  const sortedData = [...dbData].sort(
+    (a, b) => new Date(a.trading_date).getTime() - new Date(b.trading_date).getTime()
+  );
+
+  // Fill gaps (if a close_price is null, use the previous day's value)
+  for (let i = 1; i < sortedData.length; i++) {
+    if (sortedData[i].close_price == null) {
+      sortedData[i].close_price = sortedData[i - 1].close_price;
+    }
+  }
+
   // 1. Sort explicitly by date instead of relying on a raw array reverse. 
   // This guarantees oldest data is at index 0, flowing forward in time.
   const calculationData = [...dbData].sort(

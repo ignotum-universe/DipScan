@@ -32,7 +32,7 @@ export async function fetchHistoricalData(
 
     // 1. Map historical rows cleanly
     const formattedData = result.quotes
-      .filter((day: any) => day.date != null)
+      .filter((day: any) => day.date != null && day.close != null)
       .map((day: any) => ({
         ticker: ticker,
         trading_date: day.date.toISOString().split('T')[0],
@@ -71,7 +71,22 @@ if (fetchError || !unifiedDbRows || unifiedDbRows.length === 0) {
 
 // 4. Pass the database-verified rows directly to your shared engine!
 // (Note: computeMetricsFromRows handles its own array reversing internally)
-const finalizedMetrics = computeMetricsFromRows(unifiedDbRows);
+// Add this helper before passing data to your calculation engine
+const cleanDataForMath = (rows: any[]) => {
+  // Sort by date ascending to fill gaps
+  const sorted = [...rows].sort((a, b) => new Date(a.trading_date).getTime() - new Date(b.trading_date).getTime());
+  
+  for (let i = 0; i < sorted.length; i++) {
+    if (sorted[i].close_price == null && i > 0) {
+      // Forward-fill the null with the previous day's close
+      sorted[i].close_price = sorted[i - 1].close_price;
+    }
+  }
+  return sorted.reverse(); // Reverse back to original order for your engine
+};
+
+// Then pass this to your math engine:
+const finalizedMetrics = computeMetricsFromRows(cleanDataForMath(unifiedDbRows));
 
 // 5. Update metadata and save computed metrics securely
 const { error: metaError } = await supabase

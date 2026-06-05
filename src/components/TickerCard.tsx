@@ -614,7 +614,7 @@ export default function TickerCard({ ticker, data }: TickerCardProps) {
 
           Status: <span className={inPriceDiscovery ? "text-amber-700 font-bold" : "text-gray-900"}>{status}</span>
         </p>
-        <p className="text-sm font-medium text-gray-700 ">Current price: <span className="font-semibold">${latestPrice.toFixed(2)}</span></p>
+        <p className="text-sm font-medium text-gray-700 ">Current price: <span className="font-semibold">{latestPrice != null ? `$${latestPrice.toFixed(2)}` : 'N/A'}</span></p>
         <span className="inline-block mt-1 text-xs px-2 py-0.5 font-mono bg-gray-100  text-gray-600  rounded">
           {zScoreBadge.label}
         </span>
